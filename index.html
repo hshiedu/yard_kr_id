@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>삼호 Yard 한국어</title>
   
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & Babel -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -93,7 +95,7 @@
         };
         
         const icons = {
-          '공통': ( // 조선소 (크레인과 블록)
+          '공통': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M3 22V6h18v16" />
               <path d="M1 6h22" />
@@ -103,7 +105,7 @@
               <path d="M7 17l1.5-3h7L17 17" />
             </svg>
           ),
-          '가공부': ( // 철판가공 (플라즈마/레이저 절단)
+          '가공부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M3 17l4-4h14l-4 4H3z" />
               <path d="M14 4v5l-2 4" />
@@ -111,7 +113,7 @@
               <path d="M12 13l-2 2" strokeDasharray="2 2" />
             </svg>
           ),
-          '판넬조립부': ( // 평블록 (격자 형태 구조)
+          '판넬조립부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M2 18h20" />
               <path d="M5 18V6m-2 0h4" />
@@ -120,7 +122,7 @@
               <path d="M2 12h20" />
             </svg>
           ),
-          '대조립부': ( // 곡블록 (곡면 구조)
+          '대조립부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M3 4v8a9 9 0 0 0 18 0V4" />
               <path d="M3 4h18" />
@@ -130,7 +132,7 @@
               <path d="M16.5 4v14.5" />
             </svg>
           ),
-          '선행의장부': ( // 의장품 설치 (크레인 와이어와 모듈)
+          '선행의장부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <rect x="5" y="13" width="14" height="8" rx="1" />
               <circle cx="12" cy="17" r="2" />
@@ -140,7 +142,7 @@
               <path d="M9 9h6l-3 4-3-4z" />
             </svg>
           ),
-          '선행도장부': ( // 도장 (페인트 롤러)
+          '선행도장부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <rect x="6" y="3" width="12" height="6" rx="1" />
               <path d="M14 22v-8h6a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-1" />
@@ -148,7 +150,7 @@
               <path d="M3 8c0-3 3-3 3-3" strokeDasharray="2 2" />
             </svg>
           ),
-          '의장부': ( // 의장 배관 (파이프 네트워크)
+          '의장부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M2 20h20" />
               <path d="M17 20V4" />
@@ -161,7 +163,7 @@
               <path d="M13 11v4" />
             </svg>
           ),
-          '건조부': ( // 도크 (계단식 도크와 선박 정면)
+          '건조부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M2 4v4h2v4h2v10" />
               <path d="M22 4v4h-2v4h-2v10" />
@@ -171,7 +173,7 @@
               <path d="M12 10V6" />
             </svg>
           ),
-          '선실생산부': ( // 데크하우스 (선실 다층 구조)
+          '선실생산부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M4 22V14h16v8" />
               <path d="M6 14V8h12v6" />
@@ -183,7 +185,7 @@
               <rect x="10" y="10" width="4" height="2" />
             </svg>
           ),
-          '선박커미셔닝부': ( // 시운전 (파도 위를 항해하는 선박)
+          '선박커미셔닝부': (
             <svg {...svgProps} viewBox="0 0 24 24">
               <path d="M2 14h15l5-4H6z" />
               <path d="M13 10V6H9v4" />
@@ -236,7 +238,7 @@
           { id: 35, category: '작업 지시', term: '가스켓 끼워', meaning: '', vi: 'Lắp gioăng vào', pron: 'Ga-xư-kết kki-wơ' },
           { id: 36, category: '작업 지시', term: '에어불이 해', meaning: '에어로 먼지 불어내', vi: 'Thổi khí nén để làm sạch bụi', pron: 'E-ơ-bu-ri he' },
           { id: 37, category: '작업 지시', term: '송풍기 가동해', meaning: '', vi: 'Bật quạt thông gió', pron: 'Xông-phung-gi ga-đông-he' },
-          { id: 38, category: '작업 지시', term: '사다리 고정해', meaning: '', vi: 'Cố định thang chắc chắn', pron: 'Xa-đa-ri gô-chơng-he' },
+          { id: 38, category: '작업 지시', term: '사다리 고정해', meaning: '', vi: 'Cố định thang 확실히 chắn', pron: 'Xa-đa-ri gô-chơng-he' },
           { id: 39, category: '작업 지시', term: '장비 비 보호해', meaning: '', vi: 'Che chắn thiết bị khỏi mưa', pron: 'Chang-bi bi bô-hô-he' },
           { id: 40, category: '작업 지시', term: '갑바 쳐', meaning: '장비에 덮개 씌워', vi: 'Phủ bạt lên', pron: 'Gáp-ba chyơ' },
           { id: 41, category: '정리 정돈 및 마무리', term: '시마이해', meaning: '일 끝내고 마무리해', vi: 'Kết thúc công việc', pron: 'Xi-mai-he' },
@@ -417,7 +419,7 @@
           { id: 30, category: '작업/취부', term: '도랑 파지마라', meaning: '오버 사상 금지', vi: 'Đừng mài sâu quá (đừng đào mương)', pron: 'Đô-rang pha-chi-ma-ra' },
           { id: 31, category: '작업/취부', term: '빡빡 갈아라', meaning: '힘줘서 확실하게 갈아내', vi: 'Mài thật mạnh vào', pron: 'Ppac-ppac ga-ra-ra' },
           { id: 32, category: '작업/취부', term: '떡판 쳐라', meaning: '덧판 대고 용접해', vi: 'Ốp thêm tấm phụ rồi hàn', pron: 'Ttớc-phan chyơ-ra' },
-          { id: 33, category: '작업/취부', term: '장비 자리 비워', meaning: '', vi: 'Để trống chỗ cho thiết bị', pron: 'Chang-bi cha-ri bi-wơ' },
+          { id: 33, category: '작업/취부', term: '장비 자리 비워', meaning: '', vi: 'Để trống chỗ cho thiết 파기', pron: 'Chang-bi cha-ri bi-wơ' },
           { id: 34, category: '장비/도구', term: '볼트 너트 챙겨와', meaning: '', vi: 'Mang bu lông, đai ốc lại đây', pron: 'Bôn-thư nơ-thư cheng-gyơ-wa' },
           { id: 35, category: '장비/도구', term: '자재 창고 다녀와', meaning: '', vi: 'Đi kho vật tư lấy đồ đi', pron: 'Cha-che chang-gô đa-nyơ-wa' },
           { id: 36, category: '장비/도구', term: '우마 대고 뽑아내라', meaning: '론지 상하단차 작업 시 우마 이용해', vi: 'Kê giàn giáo thấp vào rồi nắn chỉnh', pron: 'U-ma đê-gô ppô-ba-ne-ra' },
@@ -886,9 +888,9 @@
                     setActiveTab(tab);
                     if (currentView === 'quiz') setQuizState('idle');
                   }}
-                  className={`tab-btn py-2 rounded-xl md:rounded-full font-bold transition-all duration-200 border text-center whitespace-nowrap text-[10px] md:text-base px-1 md:px-4 ${
+                  className={`tab-btn py-1.5 sm:py-2 rounded-lg md:rounded-full font-bold transition-all duration-200 border text-center break-keep leading-[1.15] text-[10px] sm:text-sm md:text-base px-0.5 sm:px-2 md:px-4 ${
                     activeTab === tab
-                      ? `${colorClass} text-white shadow-md transform scale-105 border-transparent`
+                      ? `${colorClass} text-white shadow-md transform scale-[1.02] border-transparent`
                       : 'bg-white text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                 >
@@ -905,9 +907,9 @@
                     setActiveTab(tab);
                     if (currentView === 'quiz') setQuizState('idle');
                   }}
-                  className={`tab-btn py-2 rounded-xl md:rounded-full font-bold transition-all duration-200 border text-center whitespace-nowrap text-[10px] md:text-base px-1 md:px-4 ${
+                  className={`tab-btn py-1.5 sm:py-2 rounded-lg md:rounded-full font-bold transition-all duration-200 border text-center break-keep leading-[1.15] text-[10px] sm:text-sm md:text-base px-0.5 sm:px-2 md:px-4 ${
                     activeTab === tab
-                      ? `${colorClass} text-white shadow-md transform scale-105 border-transparent`
+                      ? `${colorClass} text-white shadow-md transform scale-[1.02] border-transparent`
                       : 'bg-white text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-700'
                   }`}
                 >
@@ -1043,17 +1045,17 @@
                           {item.category}
                         </span>
                         <div className="mb-3 md:mb-4">
-                          <h3 className="text-lg sm:text-xl md:text-3xl font-black text-slate-800 tracking-tight group-hover:text-blue-900 transition-colors break-keep leading-snug w-full">
+                          <h3 className="text-[17px] sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight group-hover:text-blue-900 transition-colors break-words whitespace-normal leading-snug w-full">
                             {item.term}
                           </h3>
                           {item.meaning && (
-                            <p className="text-xs sm:text-sm md:text-base font-medium text-slate-500 leading-relaxed mt-1 md:mt-2 break-keep w-full">
+                            <p className="text-[13px] sm:text-sm md:text-base font-medium text-slate-500 leading-relaxed mt-1 break-words whitespace-normal w-full">
                               {item.meaning}
                             </p>
                           )}
                         </div>
                         <div className="bg-slate-50/80 rounded-xl p-3 md:p-4 border border-slate-100/80 group-hover:bg-blue-50/50 transition-colors w-full">
-                          <p className="text-sm sm:text-base md:text-lg font-bold text-teal-700 mb-1.5 md:mb-2 break-words whitespace-normal w-full">
+                          <p className="text-sm sm:text-base md:text-lg font-bold text-teal-700 mb-1.5 break-words whitespace-normal w-full">
                             🇻🇳 {item.vi}
                           </p>
                           <p className="text-xs sm:text-sm md:text-base font-medium text-slate-500 italic break-words whitespace-normal w-full">
@@ -1137,7 +1139,7 @@
                       <path d="M8 5v14l11-7z" />
                     </svg>
                   </button>
-                  <h3 className="text-lg sm:text-xl md:text-3xl font-black text-slate-800 tracking-tight leading-snug break-keep text-center w-full px-2">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight leading-snug break-words whitespace-normal text-center w-full px-2">
                     {quizQuestions[currentQuizIndex].term}
                   </h3>
                 </div>
@@ -1165,7 +1167,7 @@
                       className={`p-3 md:p-4 text-left rounded-xl border-2 text-sm md:text-lg font-bold transition-all duration-200 flex items-center w-full ${btnClass}`}
                     >
                       <span className="w-6 md:w-8 shrink-0 text-center opacity-60 mr-2 text-base md:text-xl">{index + 1}.</span> 
-                      <span className="leading-snug break-words whitespace-normal w-full">{option.vi}</span>
+                      <span className="leading-snug break-words whitespace-normal w-full text-sm sm:text-base md:text-lg">{option.vi}</span>
                     </button>
                   );
                 })}
