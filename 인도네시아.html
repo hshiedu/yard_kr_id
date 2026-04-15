@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>삼호 Yard 한국어 (인도네시아어)</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+    body { 
+      font-family: 'Noto Sans KR', sans-serif; 
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior-y: contain;
+      background-color: #f8fafc;
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    
+    /* 화면 전환 애니메이션 (더 부드럽고 매끄러운 곡선 적용) */
+    @keyframes fadeSlideUp { 
+      0% { opacity: 0; transform: translateY(30px); } 
+      100% { opacity: 1; transform: translateY(0); } 
+    }
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.92); }
+      70% { opacity: 1; transform: scale(1.02); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    .animate-fade-slide-up { 
+      animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; 
+    }
+    .animate-pop-in {
+      animation: popIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* 순차적 애니메이션 딜레이 추가 (인트로 연출용) */
+    .animate-delay-1 {
+      opacity: 0;
+      animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+    }
+    .animate-delay-2 {
+      opacity: 0;
+      animation: fadeSlideUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1.4s forwards;
+    }
+
+    /* 타이틀 네온 & 샤인 효과 */
+    @keyframes shine {
+      to { background-position: 200% center; }
+    }
+    .neon-title {
+      background: linear-gradient(to right, #1e40af, #06b6d4, #3b82f6, #1e40af);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shine 3s linear infinite;
+      text-shadow: 0 0 12px rgba(6, 182, 212, 0.3), 0 0 20px rgba(59, 130, 246, 0.15);
+    }
+  </style>
+</head>
+<body class="text-slate-900 overflow-hidden selection:bg-blue-200">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useEffect } = React;
+
+    function App() {
+      // 화면 상태 관리
+      const [currentView, setCurrentView] = useState('home'); // 'home', 'learn', 'quiz'
+      const [viewStep, setViewStep] = useState('dept_select'); // 'dept_select', 'content'
+
+      const tabs = [
+        '공통', '가공부', '판넬조립부', '대조립부', '선행의장부', 
+        '선행도장부', '의장부', '건조부', '선실생산부', '선박커미셔닝부'
+      ];
+      const [activeTab, setActiveTab] = useState(tabs[0]);
+
+      // --- 부서별 전문 라인 아트 SVG 아이콘 맵핑 함수 ---
+      const getDeptIcon = (dept) => {
+        const svgProps = {
+          className: "w-6 h-6 md:w-8 md:h-8",
+          fill: "none",
+          stroke: "currentColor",
+          strokeWidth: "2",
+          strokeLinecap: "round",
+          strokeLinejoin: "round"
+        };
+        
+        const icons = {
+          '공통': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M3 22V6h18v16" />
+              <path d="M1 6h22" />
+              <path d="M12 6v5" />
+              <path d="M10 11h4v2h-4z" />
+              <path d="M6 22v-5h12v5" />
+              <path d="M7 17l1.5-3h7L17 17" />
+            </svg>
+          ),
+          '가공부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M3 17l4-4h14l-4 4H3z" />
+              <path d="M14 4v5l-2 4" />
+              <path d="M11 4h6v3h-6z" />
+              <path d="M12 13l-2 2" strokeDasharray="2 2" />
+            </svg>
+          ),
+          '판넬조립부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M2 18h20" />
+              <path d="M5 18V6m-2 0h4" />
+              <path d="M12 18V6m-2 0h4" />
+              <path d="M19 18V6m-2 0h4" />
+              <path d="M2 12h20" />
+            </svg>
+          ),
+          '대조립부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M3 4v8a9 9 0 0 0 18 0V4" />
+              <path d="M3 4h18" />
+              <path d="M3 10h18" />
+              <path d="M12 4v17" />
+              <path d="M7.5 4v14.5" />
+              <path d="M16.5 4v14.5" />
+            </svg>
+          ),
+          '선행의장부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <rect x="5" y="13" width="14" height="8" rx="1" />
+              <circle cx="12" cy="17" r="2" />
+              <path d="M5 17h5" />
+              <path d="M14 17h5" />
+              <path d="M12 2v7" />
+              <path d="M9 9h6l-3 4-3-4z" />
+            </svg>
+          ),
+          '선행도장부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <rect x="6" y="3" width="12" height="6" rx="1" />
+              <path d="M14 22v-8h6a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-1" />
+              <path d="M12 22v-6h4v6h-4z" />
+              <path d="M3 8c0-3 3-3 3-3" strokeDasharray="2 2" />
+            </svg>
+          ),
+          '의장부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M2 20h20" />
+              <path d="M17 20V4" />
+              <path d="M15 4h4" />
+              <path d="M4 7h3a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h6" />
+              <path d="M4 5v4" />
+              <path d="M5 15h4" />
+              <path d="M7 15v5" />
+              <path d="M11 18v4" />
+              <path d="M13 11v4" />
+            </svg>
+          ),
+          '건조부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M2 4v4h2v4h2v10" />
+              <path d="M22 4v4h-2v4h-2v10" />
+              <path d="M6 22h12" />
+              <path d="M8 22l1-8h6l1 8" />
+              <path d="M10 14v-4h4v4" />
+              <path d="M12 10V6" />
+            </svg>
+          ),
+          '선실생산부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M4 22V14h16v8" />
+              <path d="M6 14V8h12v6" />
+              <path d="M9 8V4h6v4" />
+              <path d="M12 4V2" />
+              <path d="M10 2h4" />
+              <rect x="7" y="17" width="3" height="3" />
+              <rect x="14" y="17" width="3" height="3" />
+              <rect x="10" y="10" width="4" height="2" />
+            </svg>
+          ),
+          '선박커미셔닝부': (
+            <svg {...svgProps} viewBox="0 0 24 24">
+              <path d="M2 14h15l5-4H6z" />
+              <path d="M13 10V6H9v4" />
+              <path d="M11 6V3" />
+              <path d="M2 18c2-1 4-1 6 0s4 1 6 0 4-1 6 0" />
+              <path d="M4 22c2-1 4-1 6 0s4 1 6 0" />
+            </svg>
+          )
+        };
+        return icons[dept] || icons['공통'];
+      };
+
+      // --- 인도네시아어 데이터 재정비 ---
+      const learningData = useMemo(() => ({
+        '공통': [
+          { id: 1, category: '안전 및 보호구', term: '보호구 착용해', meaning: '', id_trans: 'Pakai alat pelindung diri (APD)', pron: 'Bo-ho-gu chak-yong-he' },
+          { id: 2, category: '안전 및 보호구', term: '안전벨트 체결해', meaning: '', id_trans: 'Kencangkan sabuk pengaman', pron: 'An-jeon-bel-teu che-gyeol-he' },
+          { id: 3, category: '안전 및 보호구', term: '벨트 꼭 매', meaning: '', id_trans: 'Kencangkan sabuk pengaman', pron: 'Bel-teu kkok mae' },
+          { id: 4, category: '안전 및 보호구', term: '보안경 착용해', meaning: '', id_trans: 'Pakai kacamata pelindung', pron: 'Bo-an-gyeong chak-yong-he' },
+          { id: 5, category: '안전 및 보호구', term: '귀마개 착용해', meaning: '', id_trans: 'Pakai penutup telinga', pron: 'Gwi-ma-ge chak-yong-he' },
+          { id: 6, category: '안전 및 보호구', term: '3타점 준수해', meaning: '', id_trans: 'Patuhi aturan 3 titik tumpu', pron: 'Sam-ta-jeom jun-su-he' },
+          { id: 7, category: '안전 및 보호구', term: '뒷걸음질 금지해', meaning: '', id_trans: 'Dilarang berjalan mundur', pron: 'Dwit-geo-reum-jil geum-ji-he' },
+          { id: 8, category: '안전 및 보호구', term: '추락 조심해', meaning: '', id_trans: 'Hati-hati jatuh', pron: 'Chu-rak jo-sim-he' },
+          { id: 9, category: '안전 및 보호구', term: '낙하물 조심해', meaning: '', id_trans: 'Hati-hati benda jatuh dari atas', pron: 'Nak-ha-mul jo-sim-he' },
+          { id: 10, category: '안전 전반', term: '난간을 잡아', meaning: '', id_trans: 'Pegang pegangan tangga (railing)', pron: 'Nan-gan-eul ja-ba' },
+          { id: 11, category: '안전 전반', term: '협착 사고 조심해', meaning: '', id_trans: 'Hati-hati kecelakaan terjepit', pron: 'Hyeop-chak sa-go jo-sim-he' },
+          { id: 12, category: '안전 전반', term: '안전 통로 이용해', meaning: '', id_trans: 'Gunakan jalur aman', pron: 'An-jeon tong-ro i-yong-he' },
+          { id: 13, category: '안전 전반', term: '화기 감시해', meaning: '', id_trans: 'Awasi pekerjaan api/panas', pron: 'Hwa-gi gam-si-he' },
+          { id: 14, category: '안전 전반', term: '소화기 위치 확인해', meaning: '', id_trans: 'Periksa lokasi pemadam api (APAR)', pron: 'So-hwa-gi wi-chi hwa-gin-he' },
+          { id: 15, category: '안전 전반', term: '비상 탈출구 봐둬', meaning: '', id_trans: 'Perhatikan jalur evakuasi', pron: 'Bi-sang tal-chul-gu bwa-dwo' },
+          { id: 16, category: '안전 전반', term: '구급상자 위치 봐', meaning: '', id_trans: 'Periksa lokasi kotak P3K', pron: 'Gu-geup-sang-ja wi-chi bwa' },
+          { id: 17, category: '안전 전반', term: '밀폐 구역 조심해', meaning: '', id_trans: 'Hati-hati area ruang terbatas (confined space)', pron: 'Mil-pe gu-yeok jo-sim-he' },
+          { id: 18, category: '안전 전반', term: '안전 교육 받아', meaning: '', id_trans: 'Ikuti pelatihan keselamatan', pron: 'An-jeon gyo-yuk ba-da' },
+          { id: 19, category: '작업 준비 및 소통', term: '단도리 해', meaning: '작업 준비 철저히 해', id_trans: 'Siapkan dan rapikan dengan baik', pron: 'Dan-do-ri he' },
+          { id: 20, category: '작업 준비 및 소통', term: 'TBM 실시해', meaning: '', id_trans: 'Lakukan TBM (Tool Box Meeting)', pron: 'Ti-bi-em sil-si-he' },
+          { id: 21, category: '작업 준비 및 소통', term: 'TBM 등록해', meaning: '', id_trans: 'Daftarkan TBM', pron: 'Ti-bi-em deung-nok-he' },
+          { id: 22, category: '작업 준비 및 소통', term: '도면 확인해', meaning: '', id_trans: 'Periksa gambar kerja (drawing)', pron: 'Do-myeon hwa-gin-he' },
+          { id: 23, category: '작업 준비 및 소통', term: '도면 가져와', meaning: '', id_trans: 'Bawa gambar kerjanya', pron: 'Do-myeon ga-jyeo-wa' },
+          { id: 24, category: '작업 준비 및 소통', term: '작업 완료 보고해', meaning: '', id_trans: 'Laporkan jika pekerjaan selesai', pron: 'Ja-geop wal-ryo bo-go-he' },
+          { id: 25, category: '작업 준비 및 소통', term: '수신호 해', meaning: '', id_trans: 'Berikan isyarat tangan', pron: 'Su-sin-ho he' },
+          { id: 26, category: '작업 준비 및 소통', term: '허가증 받아와', meaning: '', id_trans: 'Ambil surat izin kerja', pron: 'Heo-ga-jeung ba-da-wa' },
+          { id: 27, category: '작업 준비 및 소통', term: '비상 연락처 저장해', meaning: '', id_trans: 'Simpan nomor kontak darurat', pron: 'Bi-sang yeon-lak-cheo jeo-jang-he' },
+          { id: 28, category: '작업 준비 및 소통', term: '아프면 보고해', meaning: '', id_trans: 'Laporkan segera jika sakit', pron: 'A-peu-myeon bo-go-he' },
+          { id: 29, category: '작업 지시', term: '사상해', meaning: '표면을 매끄럽게 갈아내', id_trans: 'Haluskan permukaannya (Gerinda)', pron: 'Sa-sang-he' },
+          { id: 30, category: '작업 지시', term: '갈아', meaning: '', id_trans: 'Gerinda/haluskan', pron: 'Ga-ra' },
+          { id: 31, category: '작업 지시', term: '볼팅해', meaning: '', id_trans: 'Kencangkan bautnya', pron: 'Bol-ting-he' },
+          { id: 32, category: '작업 지시', term: '자재 탑재해', meaning: '', id_trans: 'Naikkan material', pron: 'Ja-jae tap-jae-he' },
+          { id: 33, category: '작업 지시', term: '유니트 탑재해', meaning: '', id_trans: 'Naikkan unit/blok', pron: 'Yu-ni-teu tap-jae-he' },
+          { id: 34, category: '작업 지시', term: '가스켓 넣어', meaning: '', id_trans: 'Masukkan gasket', pron: 'Ga-seu-ket neo-eo' },
+          { id: 35, category: '작업 지시', term: '가스켓 끼워', meaning: '', id_trans: 'Pasang gasket', pron: 'Ga-seu-ket kki-wo' },
+          { id: 36, category: '작업 지시', term: '에어불이 해', meaning: '에어로 먼지 불어내', id_trans: 'Bersihkan debu dengan semprotan angin', pron: 'E-eo-bu-ri he' },
+          { id: 37, category: '작업 지시', term: '송풍기 가동해', meaning: '', id_trans: 'Nyalakan kipas ventilasi (blower)', pron: 'Song-pung-gi ga-dong-he' },
+          { id: 38, category: '작업 지시', term: '사다리 고정해', meaning: '', id_trans: 'Kencangkan/amankan tangga dengan kuat', pron: 'Sa-da-ri go-jeong-he' },
+          { id: 39, category: '작업 지시', term: '장비 비 보호해', meaning: '', id_trans: 'Lindungi peralatan dari hujan', pron: 'Jang-bi bi bo-ho-he' },
+          { id: 40, category: '작업 지시', term: '갑바 쳐', meaning: '장비에 덮개 씌워', id_trans: 'Tutup dengan terpal', pron: 'Gap-ba chyeo' },
+          { id: 41, category: '정리 정돈 및 마무리', term: '시마이해', meaning: '일 끝내고 마무리해', id_trans: 'Selesaikan pekerjaan (kemas-kemas)', pron: 'Si-ma-i-he' },
+          { id: 42, category: '정리 정돈 및 마무리', term: '시마이하자', meaning: '일 끝내고 마무리하자', id_trans: 'Ayo selesaikan pekerjaan dan istirahat', pron: 'Si-ma-i-ha-ja' },
+          { id: 43, category: '정리 정돈 및 마무리', term: '야리끼 해', meaning: '작업량 다 채우고 쉬어', id_trans: 'Selesaikan target lalu istirahat (borongan)', pron: 'Ya-ri-kki he' },
+          { id: 44, category: '정리 정돈 일상', term: '마이존 청소해', meaning: '', id_trans: 'Bersihkan area kerjamu sendiri', pron: 'Ma-i-jon cheong-so-he' },
+          { id: 45, category: '정리 정돈 일상', term: '빈 깡통 치워', meaning: '', id_trans: 'Singkirkan kaleng kosong', pron: 'Bin kkang-tong chi-wo' },
+          { id: 46, category: '정리 정돈 일상', term: '빈 박스 치워', meaning: '', id_trans: 'Singkirkan kardus kosong', pron: 'Bin bak-seu chi-wo' },
+          { id: 47, category: '정리 정돈 일상', term: '마대에 담아', meaning: '', id_trans: 'Masukkan ke dalam karung', pron: 'Ma-dae-e da-ma' },
+          { id: 48, category: '정리 정돈 일상', term: '숙소 청소해', meaning: '', id_trans: 'Bersihkan asrama/kamar', pron: 'Suk-so cheong-so-he' },
+          { id: 49, category: '기타 생활 및 소통', term: '음주 작업 금지해', meaning: '', id_trans: 'Dilarang bekerja saat mabuk', pron: 'Eum-ju ja-geop geum-ji-he' },
+          { id: 50, category: '기타 생활 및 소통', term: '수분 섭취해', meaning: '', id_trans: 'Banyak minum air', pron: 'Su-bun seop-chwi-he' },
+          { id: 51, category: '기타 생활 및 소통', term: '포도당 먹어', meaning: '', id_trans: 'Minum pil glukosa/garam', pron: 'Po-do-dang meo-geo' },
+          { id: 52, category: '기타 생활 및 소통', term: '고생했어', meaning: '', id_trans: 'Terima kasih atas kerja kerasnya', pron: 'Go-saeng-haet-seo' },
+          { id: 53, category: '기타 생활 및 소통', term: '내일 봐', meaning: '', id_trans: 'Sampai jumpa besok', pron: 'Nae-il bwa' }
+        ],
+        '가공부': [
+          { id: 1, category: '절단/마킹', term: 'NC 커팅 시작해', meaning: '기계 절단 시작해', id_trans: 'Mulai pemotongan NC', pron: 'En-si keo-ting si-jak-he' },
+          { id: 2, category: '절단/마킹', term: '철판 마킹 확인해', meaning: '', id_trans: 'Periksa penandaan plat besi', pron: 'Cheol-pan ma-king hwa-gin-he' },
+          { id: 3, category: '절단/마킹', term: '모재 두께 재봐', meaning: '', id_trans: 'Ukur ketebalan material dasar', pron: 'Mo-jae du-kke jae-bwa' },
+          { id: 4, category: '절단/마킹', term: '개선 가공 해', meaning: '가장자리 깎아내 (V커팅)', id_trans: 'Proses pinggiran (V-cutting/beveling)', pron: 'Gae-seon ga-gong he' },
+          { id: 5, category: '절단/마킹', term: '판재 번호 써', meaning: '', id_trans: 'Tulis nomor plat', pron: 'Pan-jae beon-ho sseo' },
+          { id: 6, category: '절단/마킹', term: '커팅 속도 조절해', meaning: '', id_trans: 'Atur kecepatan potong', pron: 'Keo-ting sok-do jo-jeol-he' },
+          { id: 7, category: '절단/마킹', term: '도면 치수랑 맞춰봐', meaning: '', id_trans: 'Sesuaikan dengan ukuran gambar', pron: 'Do-myeon chi-su-rang mat-chwo-bwa' },
+          { id: 8, category: '절단/마킹', term: '프라즈마 체크해', meaning: '', id_trans: 'Periksa mesin plasma', pron: 'Peu-ra-jeu-ma che-keu-he' },
+          { id: 9, category: '절단/마킹', term: '캇타 써라', meaning: '절단기 사용해', id_trans: 'Gunakan mesin pemotong', pron: 'Kat-ta sseo-ra' },
+          { id: 10, category: '취부/용접', term: '피스 발라버려라', meaning: '', id_trans: 'Pasang piece (potongan besi bantu)', pron: 'Pi-seu bal-ra-beo-ryeo-ra' },
+          { id: 11, category: '취부/용접', term: '후레임 꼬매라', meaning: '프레임 용접해', id_trans: 'Las frame (bingkai)', pron: 'Hu-re-im kko-mae-ra' },
+          { id: 12, category: '취부/용접', term: '주판 꼬매라', meaning: '큰 철판 용접해', id_trans: 'Las plat utama', pron: 'Ju-pan kko-mae-ra' },
+          { id: 13, category: '취부/용접', term: '더때기 해서 발라 불어', meaning: '보강재 덧대서 용접해', id_trans: 'Tambahkan penguat lalu las', pron: 'Deot-dae-gi hae-seo bal-ra bu-reo' },
+          { id: 14, category: '취부/용접', term: '스티프너 세워서 잡어야', meaning: '보강재 세워서 용접해', id_trans: 'Dirikan pengaku (stiffener) lalu las', pron: 'Seu-ti-peu-neo se-wo-seo ja-beo-ya' },
+          { id: 15, category: '취부/용접', term: '반반 먹어라', meaning: '양쪽 똑같이 나눠서 해', id_trans: 'Bagi rata ke kedua sisi', pron: 'Ban-ban meo-geo-ra' },
+          { id: 16, category: '취부/용접', term: '지그제그 용접 해라', meaning: '', id_trans: 'Las secara zigzag', pron: 'Ji-geu-je-geu yong-jeop he-ra' },
+          { id: 17, category: '취부/용접', term: '임시 피스 단단히 때워라', meaning: '', id_trans: 'Las piece sementara dengan kuat', pron: 'Im-si pi-seu dan-dan-hi ttae-wo-ra' },
+          { id: 18, category: '취부/용접', term: '양쪽 지져라', meaning: '양쪽 가접해', id_trans: 'Las cantum (tack weld) kedua sisi', pron: 'Yang-jjok ji-jyeo-ra' },
+          { id: 19, category: '취부/용접', term: '철판 좀 붙여라', meaning: '철판 용접해', id_trans: 'Las dan tempelkan plat besinya', pron: 'Cheol-pan jom bu-chyeo-ra' },
+          { id: 20, category: '취부/용접', term: '블록 터지니께 야무지게 해야', meaning: '튼튼하게 용접해', id_trans: 'Las dengan kuat agar blok tidak retak', pron: 'Beul-rok teo-ji-ni-kke ya-mu-ji-ge he-ya' },
+          { id: 21, category: '수정/사상', term: '사비 털어', meaning: '녹 제거해', id_trans: 'Bersihkan karat', pron: 'Sa-bi teo-reo' },
+          { id: 22, category: '수정/사상', term: '슬래그 제거해', meaning: '', id_trans: 'Bersihkan terak las (slag)', pron: 'Seul-rae-geu je-geo-he' },
+          { id: 23, category: '수정/사상', term: '스파타 털어', meaning: '용접 찌꺼기 털어', id_trans: 'Bersihkan percikan las (spatter)', pron: 'Seu-pa-ta teo-reo' },
+          { id: 24, category: '수정/사상', term: '뺑끼 발라', meaning: '페인트 칠해', id_trans: 'Oleskan cat', pron: 'Ppaeng-kki bal-ra' },
+          { id: 25, category: '수정/사상', term: '뺑끼 까고 발라', meaning: '페인트 벗기고 다시 칠해', id_trans: 'Kupas cat lama lalu cat ulang', pron: 'Ppaeng-kki kka-go bal-ra' },
+          { id: 26, category: '수정/사상', term: '블록에 불줘', meaning: '열 가해서 모양 잡아', id_trans: 'Panaskan blok (untuk membentuk)', pron: 'Beul-rok-e bul-jwo' },
+          { id: 27, category: '수정/사상', term: '불질 좀 해라', meaning: '열 가해서 모양 잡아', id_trans: 'Panaskan dan bentuklah', pron: 'Bul-jil jom he-ra' },
+          { id: 28, category: '수정/사상', term: '가우징 까불어', meaning: '용접 불량 녹여서 깎아내', id_trans: 'Lakukan gouging (cungkil cacat lasan)', pron: 'Ga-u-jing kka-bu-reo' },
+          { id: 29, category: '수정/사상', term: '탭피스 데불어', meaning: '임시 조각 붙여서 수평 맞춰', id_trans: 'Pasang tab piece (untuk meratakan)', pron: 'Taep-pi-seu de-bu-reo' },
+          { id: 30, category: '수정/사상', term: '절단면 사상해', meaning: '절단면 갈아내', id_trans: 'Haluskan permukaan potongan', pron: 'Jeol-dan-myeon sa-sang-he' },
+          { id: 31, category: '수정/사상', term: '워싱작업해', meaning: '물로 씻어내', id_trans: 'Cuci dengan air', pron: 'Wo-sing-ja-geop-he' },
+          { id: 32, category: '공구/장비', term: '야 가지고 와', meaning: '쐐기(고임목) 가져와', id_trans: 'Bawa ganjalan (baji) ke sini', pron: 'Ya ga-ji-go wa' },
+          { id: 33, category: '공구/장비', term: '데꼬파이프 가지고 와', meaning: '지렛대 파이프 가져와', id_trans: 'Bawa pipa pengungkit ke sini', pron: 'De-kko-pa-i-peu ga-ji-go wa' },
+          { id: 34, category: '공구/장비', term: '레바로 당겨불어', meaning: '레버풀러로 당겨', id_trans: 'Tarik pakai tuas (lever puller)', pron: 'Re-ba-ro dang-gyeo-bu-reo' },
+          { id: 35, category: '공구/장비', term: '니플 암놈 숫놈 갑시다', meaning: '에어 연결부 교체하자', id_trans: 'Ganti konektor angin (male/female)', pron: 'Ni-peul am-nom sut-nom gap-si-da' },
+          { id: 36, category: '공구/장비', term: '볼트 시메루해', meaning: '볼트 꽉 조여', id_trans: 'Kencangkan baut sekuatnya', pron: 'Bol-teu si-me-ru-he' },
+          { id: 37, category: '공구/장비', term: '하카 체결해', meaning: '클램프 꽉 고정해', id_trans: 'Kencangkan klem penarik (huck)', pron: 'Ha-ka che-gyeol-he' },
+          { id: 38, category: '작업/환경', term: '모루에 가서 해라', meaning: '작업대 가서 해', id_trans: 'Lakukan di meja kerja', pron: 'Mo-ru-e ga-seo he-ra' },
+          { id: 39, category: '작업/환경', term: '씹힌다', meaning: '끼인다 (눌린다)', id_trans: 'Terjepit (tergulung)', pron: 'Ssip-hin-da' }
+        ],
+        '판넬조립부': [
+          { id: 1, category: '취부/조립', term: '론지 배치해', meaning: '', id_trans: 'Atur posisi longitudinal', pron: 'Ron-ji bae-chi-he' },
+          { id: 2, category: '취부/조립', term: '론지 간격 재봐', meaning: '', id_trans: 'Ukur jarak antar longitudinal', pron: 'Ron-ji gan-gyeok jae-bwa' },
+          { id: 3, category: '취부/조립', term: '론지 똑바로 세워', meaning: '', id_trans: 'Dirikan longitudinal tegak lurus', pron: 'Ron-ji ttok-ba-ro se-wo' },
+          { id: 4, category: '취부/조립', term: '끝부분 맞춰', meaning: '', id_trans: 'Sejajarkan bagian ujung', pron: 'Kkeut-bu-bun mat-chwo' },
+          { id: 5, category: '취부/조립', term: '부재 직각 맞춰', meaning: '', id_trans: 'Sesuaikan sudut siku-siku material', pron: 'Bu-jae jik-gak mat-chwo' },
+          { id: 6, category: '취부/조립', term: '단틈 맞춰', meaning: '단차(높낮이) 맞춰', id_trans: 'Sesuaikan perbedaan tinggi (gap)', pron: 'Dan-teum mat-chwo' },
+          { id: 7, category: '취부/조립', term: '가다 라인 맞춰', meaning: '거더(Gir) 마킹라인에 맞춰', id_trans: 'Sesuaikan girder dengan garis marking', pron: 'Ga-da ra-in mat-chwo' },
+          { id: 8, category: '취부/조립', term: '부재 라인 맞춰', meaning: '부재 마킹라인에 맞춰', id_trans: 'Sesuaikan material dengan garis marking', pron: 'Bu-jae ra-in mat-chwo' },
+          { id: 9, category: '취부/조립', term: '취부 피스 박아', meaning: '', id_trans: 'Las piece bantu untuk perakitan sementara', pron: 'Chwi-bu pi-seu ba-ga' },
+          { id: 10, category: '취부/조립', term: '부재 밀리지 않게 해', meaning: '', id_trans: 'Kencangkan agar material tidak bergeser', pron: 'Bu-jae mil-ri-ji an-ke he' },
+          { id: 11, category: '취부/조립', term: '브라켓 붙여', meaning: '', id_trans: 'Pasang braket', pron: 'Beu-ra-ket bu-chyeo' },
+          { id: 12, category: '취부/조립', term: '버티컬 찝어', meaning: '버티컬 취부해', id_trans: 'Las cantum material vertikal', pron: 'Beo-ti-keol jji-beo' },
+          { id: 13, category: '취부/조립', term: '바닥 찝어', meaning: '바닥 취부해', id_trans: 'Las cantum bagian lantai', pron: 'Ba-dak jji-beo' },
+          { id: 14, category: '취부/조립', term: '후로어 탑재해', meaning: '프레임(Fr) 탑재해', id_trans: 'Rakit frame lantai (floor) ke atas', pron: 'Hu-ro-eo tap-jae-he' },
+          { id: 15, category: '취부/조립', term: '아다리가 안맞는다', meaning: '서로 딱 안 맞는다', id_trans: 'Posisi tidak pas satu sama lain', pron: 'A-da-ri-ga an-mat-neun-da' },
+          { id: 16, category: '취부/조립', term: '부재 나라시 해', meaning: '부재 배열해', id_trans: 'Ratakan susunan material di lantai', pron: 'Bu-jae na-ra-si he' },
+          { id: 17, category: '용접/작업', term: '자동 용접기 가동해', meaning: '', id_trans: 'Nyalakan mesin las otomatis', pron: 'Ja-dong yong-jeop-gi ga-dong-he' },
+          { id: 18, category: '용접/작업', term: '가접 찍어', meaning: '임시 용접해', id_trans: 'Lakukan las cantum sementara', pron: 'Ga-jeop jji-geo' },
+          { id: 19, category: '용접/작업', term: '필렛 용접 해', meaning: '', id_trans: 'Lakukan las sudut (fillet)', pron: 'Pil-ret yong-jeop he' },
+          { id: 20, category: '용접/작업', term: '빽 확인해', meaning: '용접 이면부 확인해', id_trans: 'Periksa bagian belakang lasan', pron: 'Ppaek hwa-gin-he' },
+          { id: 21, category: '용접/작업', term: '빽내', meaning: '심 용접해', id_trans: 'Lakukan pengelasan bagian belakang (backing)', pron: 'Ppaeng-nae' },
+          { id: 22, category: '용접/작업', term: '비드 깨끗하게 해', meaning: '', id_trans: 'Bersihkan jalur las (bead)', pron: 'Bi-deu kke-kkeut-ha-ge he' },
+          { id: 23, category: '용접/작업', term: '언더컷 안 나게 해', meaning: '', id_trans: 'Hati-hati jangan sampai ada cacat undercut', pron: 'Eon-deo-keot an na-ge he' },
+          { id: 24, category: '용접/작업', term: '너무 오래 지지지 마', meaning: '너무 오래 용접하지 마', id_trans: 'Jangan mengelas/memanaskan di satu titik terlalu lama', pron: 'Neo-mu o-rae ji-ji-ji ma' },
+          { id: 25, category: '용접/작업', term: '용접 겹치지 않게 해', meaning: '', id_trans: 'Hati-hati jangan sampai lasan tumpang tindih', pron: 'Yong-jeop gyeop-chi-ji an-ke he' },
+          { id: 26, category: '용접/작업', term: '리꾸 박아라', meaning: '갭부분 용접으로 채워라', id_trans: 'Isi celah lebar dengan lasan (build-up)', pron: 'Ri-kku ba-ga-ra' },
+          { id: 27, category: '용접/작업', term: '와이어 잘 나오나 봐', meaning: '', id_trans: 'Periksa apakah kawat las keluar dengan lancar', pron: 'Wa-i-eo jal na-o-na bwa' },
+          { id: 28, category: '용접/작업', term: '와이어 교체해', meaning: '', id_trans: 'Ganti kawat las', pron: 'Wa-i-eo gyo-che-he' },
+          { id: 29, category: '용접/작업', term: '어스 제대로 집어', meaning: '접지 꽉 물려', id_trans: 'Jepit kabel massa (grounding) dengan benar', pron: 'Eo-seu je-dae-ro ji-beo' },
+          { id: 30, category: '용접/작업', term: '토치 노즐 닦아', meaning: '', id_trans: 'Bersihkan nozzle obor las', pron: 'To-chi no-jeul da-kka' },
+          { id: 31, category: '검사/수정', term: '정반 수평 확인해', meaning: '', id_trans: 'Periksa kerataan meja kerja', pron: 'Jeong-ban su-pyeong hwa-gin-he' },
+          { id: 32, category: '검사/수정', term: '똥 제거해', meaning: '용접 찌꺼기 치워', id_trans: 'Bersihkan terak las (slag)', pron: 'Ttong je-geo-he' },
+          { id: 33, category: '검사/수정', term: '기라성 제거하자', meaning: '용접 슬래그 제거하자', id_trans: 'Mari bersihkan debu percikan las', pron: 'Gi-ra-seong je-geo-ha-ja' },
+          { id: 34, category: '검사/수정', term: '스파타 제거해', meaning: '용접 불꽃 찌꺼기 제거해', id_trans: 'Bersihkan percikan las (spatter)', pron: 'Seu-pa-ta je-geo-he' },
+          { id: 35, category: '검사/수정', term: '리바리 불어', meaning: '찌꺼기 불어내', id_trans: 'Semprot bersih sisa kotoran/potongan', pron: 'Ri-ba-ri bu-reo' },
+          { id: 36, category: '검사/수정', term: '턴오버 해', meaning: '', id_trans: 'Balikkan blok (dengan crane)', pron: 'Teon-o-beo he' },
+          { id: 37, category: '검사/수정', term: '철판 뒤틀림 봐', meaning: '', id_trans: 'Periksa kebengkokan plat besi', pron: 'Cheol-pan dwi-teul-rim bwa' },
+          { id: 38, category: '검사/수정', term: '부재 데미지 펴', meaning: '부재 곡직 작업해', id_trans: 'Luruskan kembali material yang bengkok', pron: 'Bu-jae de-mi-ji pyeo' },
+          { id: 39, category: '검사/수정', term: '여기 오작났으니 수정하자', meaning: '잘못 작업되었으니 수정하자', id_trans: 'Bagian ini salah kerjanya, ayo perbaiki', pron: 'Yeo-gi o-jak-nat-seu-ni su-jeong-ha-ja' },
+          { id: 40, category: '검사/수정', term: '징크 발라', meaning: '징크 터치업 작업해', id_trans: 'Oleskan cat zinc (galvanis)', pron: 'Jing-keu bal-ra' },
+          { id: 41, category: '검사/수정', term: '징크볼라', meaning: '징크 발라', id_trans: 'Oleskan cat zinc', pron: 'Jing-keu-bol-ra' },
+          { id: 42, category: '장비/공구', term: '마그네트 써', meaning: '', id_trans: 'Gunakan magnet', pron: 'Ma-geu-ne-teu sseo' },
+          { id: 43, category: '장비/공구', term: '인치 당겨', meaning: '레바블록 체결해서 당겨', id_trans: 'Tarik dengan chain block', pron: 'In-chi dang-gyeo' },
+          { id: 44, category: '장비/공구', term: '레바 땡겨', meaning: '레바 풀러 당겨', id_trans: 'Tarik tuas penarik (lever puller)', pron: 'Re-ba ttaeng-gyeo' },
+          { id: 45, category: '장비/공구', term: '깔깔이로 작업해', meaning: '라쳇푸셔로 작업하세요', id_trans: 'Gunakan kunci pas ratchet (kalkal-i)', pron: 'Kkal-kkal-i-ro ja-geop-he' },
+          { id: 46, category: '장비/공구', term: '썰어브러', meaning: '절단해', id_trans: 'Potong saja', pron: 'Sseo-reo-beu-reo' },
+          { id: 47, category: '장비/공구', term: '문대브러', meaning: '사상해', id_trans: 'Haluskan (gerinda) saja', pron: 'Mun-dae-beu-reo' },
+          { id: 48, category: '장비/공구', term: '가스통 바꿔', meaning: '', id_trans: 'Ganti tabung gasnya', pron: 'Ga-seu-tong ba-kkwo' }
+        ],
+        '대조립부': [
+          { id: 1, category: '취부/탑재', term: '핀지그 높이 조절해', meaning: '', id_trans: 'Atur ketinggian pin jig', pron: 'Pin-ji-geu no-pi jo-jeol-he' },
+          { id: 2, category: '취부/탑재', term: '갭 줄여', meaning: '', id_trans: 'Perkecil jarak celah (gap)', pron: 'Gaep ju-ryeo' },
+          { id: 3, category: '취부/탑재', term: '서포트 세워', meaning: '', id_trans: 'Dirikan tiang penyangga (support)', pron: 'Seo-po-teu se-wo' },
+          { id: 4, category: '취부/탑재', term: '턴오버 작업 시 반경 비우세요', meaning: '', id_trans: 'Jauhi radius area saat membalik blok (turnover)', pron: 'Teon-o-beo ja-geop si ban-gyeong bi-u-se-yo' },
+          { id: 5, category: '취부/탑재', term: '센터 라인 맞춰', meaning: '', id_trans: 'Sejajarkan dengan garis tengah (center line)', pron: 'Sen-teo ra-in mat-chwo' },
+          { id: 6, category: '취부/탑재', term: '단차 확인해', meaning: '', id_trans: 'Periksa perbedaan ketinggian antar plat', pron: 'Dan-cha hwa-gin-he' },
+          { id: 7, category: '취부/탑재', term: '가이드 피스 용접해', meaning: '', id_trans: 'Las piece pemandu (guide piece)', pron: 'Ga-i-deu pi-seu yong-jeop-he' },
+          { id: 8, category: '취부/탑재', term: '피스 위치가 도면이랑 다릅니다', meaning: '', id_trans: 'Posisi piece berbeda dengan gambar kerja', pron: 'Pi-seu wi-chi-ga do-myeon-i-rang da-reum-ni-da' },
+          { id: 9, category: '취부/탑재', term: '마킹 선 따라서 배치하세요', meaning: '', id_trans: 'Letakkan sesuai dengan garis marking', pron: 'Ma-king seon tta-ra-seo bae-chi-ha-se-yo' },
+          { id: 10, category: '취부/탑재', term: '반목 수평 맞는지 확인하세요', meaning: '', id_trans: 'Periksa apakah balok penyangga sudah rata', pron: 'Ban-mok su-pyeong mat-neun-ji hwa-gin-ha-se-yo' },
+          { id: 11, category: '취부/탑재', term: '실제 길이 재봐', meaning: '', id_trans: 'Ukur panjang aslinya', pron: 'Sil-je gi-ri jae-bwa' },
+          { id: 12, category: '용접/수정', term: '러그 용접해', meaning: '', id_trans: 'Las lug (kaitan crane)', pron: 'Reo-geu yong-jeop-he' },
+          { id: 13, category: '용접/수정', term: '러그 제거해', meaning: '', id_trans: 'Lepaskan lug', pron: 'Reo-geu je-geo-he' },
+          { id: 14, category: '용접/수정', term: '가우징 파', meaning: '', id_trans: 'Lakukan gouging (keruk dengan karbon)', pron: 'Ga-u-jing pa' },
+          { id: 15, category: '용접/수정', term: '결함 부위 파내', meaning: '결함 부위 가우징해', id_trans: 'Gali/keruk bagian yang cacat', pron: 'Gyeol-ham bu-wi pa-nae' },
+          { id: 16, category: '용접/수정', term: '백 가우징 깊이 확인하세요', meaning: '', id_trans: 'Periksa kedalaman back gouging', pron: 'Baek ga-u-jing gi-pi hwa-gin-ha-se-yo' },
+          { id: 17, category: '용접/수정', term: '육성해', meaning: '육성 용접 해', id_trans: 'Lakukan las penebalan (build-up)', pron: 'Yuk-seong-he' },
+          { id: 18, category: '용접/수정', term: '데나오시 해', meaning: '보수 작업해', id_trans: 'Perbaiki bagian yang salah (rework)', pron: 'De-na-o-si he' },
+          { id: 19, category: '용접/수정', term: '루트 간격이 너무 넓습니다', meaning: '', id_trans: 'Jarak celah akar (root gap) terlalu lebar', pron: 'Ru-teu gan-gyeok-i neo-mu neol-seum-ni-da' },
+          { id: 20, category: '용접/수정', term: '홀딩 상태에서 용접하세요', meaning: '', id_trans: 'Las dalam kondisi terkunci rapat (holding)', pron: 'Hol-ding sang-tae-e-seo yong-jeop-ha-se-yo' },
+          { id: 21, category: '용접/수정', term: '베벨 각도 다시 잡으세요', meaning: '', id_trans: 'Atur ulang sudut bevel', pron: 'Be-bel gak-do da-si ja-beu-se-yo' },
+          { id: 22, category: '검사/테스트', term: '정도 체크해', meaning: '수직 수평 재봐', id_trans: 'Periksa akurasi dimensi (kerataan vertikal/horizontal)', pron: 'Jeong-do che-keu-he' },
+          { id: 23, category: '검사/테스트', term: '수압 테스트 준비 완료됐나요?', meaning: '', id_trans: 'Apakah persiapan tes tekanan air sudah selesai?', pron: 'Su-ap te-seu-teu jun-bi wal-ryo-dwaet-na-yo?' },
+          { id: 24, category: '검사/테스트', term: '이면 확인해', meaning: '', id_trans: 'Periksa bagian belakang', pron: 'I-myeon hwa-gin-he' },
+          { id: 25, category: '검사/테스트', term: 'RT 구간 대피하세요', meaning: '', id_trans: 'Menjauhlah dari area uji rontgen (RT)', pron: 'Al-ti gu-gan dae-pi-ha-se-yo' },
+          { id: 26, category: '검사/테스트', term: '선주 검사 대비 청소하세요', meaning: '', id_trans: 'Bersihkan untuk persiapan inspeksi pemilik kapal', pron: 'Seon-ju geom-sa dae-bi cheong-so-ha-se-yo' },
+          { id: 27, category: '도면/서류', term: '도면 최신 리비전 확인하세요', meaning: '', id_trans: 'Pastikan gambar kerjanya adalah revisi terbaru', pron: 'Do-myeon choe-sin ri-bi-jeon hwa-gin-ha-se-yo' },
+          { id: 28, category: '검사/수정', term: '오작 난 부분 마킹해 뒀습니다', meaning: '', id_trans: 'Bagian yang salah kerjanya sudah ditandai', pron: 'O-jak nan bu-bun ma-king-he dwot-seum-ni-da' },
+          { id: 29, category: '블록/탑재', term: '블록 탑재 대기해', meaning: '', id_trans: 'Tunggu instruksi pemasangan blok', pron: 'Beul-rok tap-jae dae-gi-he' },
+          { id: 30, category: '장비/공구', term: '샤클 채워', meaning: '', id_trans: 'Kunci/pasang shackle', pron: 'Sya-keul chae-wo' },
+          { id: 31, category: '장비/공구', term: '샤클 핀 끝까지 잠그세요', meaning: '', id_trans: 'Kunci pin shackle sampai mentok', pron: 'Sya-keul pin kkeut-kka-ji jam-geu-se-yo' },
+          { id: 32, category: '장비/공구', term: '유압 잭 가져와', meaning: '', id_trans: 'Bawa dongkrak hidrolik', pron: 'Yu-ap jaek ga-jyeo-wa' },
+          { id: 33, category: '장비/공구', term: '줄걸이 상태 확인해', meaning: '', id_trans: 'Periksa kondisi tali angkut (sling)', pron: 'Jul-geo-ri sang-tae hwa-gin-he' },
+          { id: 34, category: '장비/공구', term: '슬링벨트 확인해', meaning: '', id_trans: 'Periksa sabuk sling (sling belt)', pron: 'Seul-ring-bel-teu hwa-gin-he' },
+          { id: 35, category: '장비/공구', term: '클램프 제대로 물렸는지 보세요', meaning: '', id_trans: 'Lihat apakah klem menjepit dengan benar', pron: 'Keul-raem-peu je-dae-ro mul-ryeot-neun-ji bo-se-yo' },
+          { id: 36, category: '장비/공구', term: '지브 크레인 간섭 주의하세요', meaning: '', id_trans: 'Hati-hati tabrakan/gangguan dengan Jib Crane', pron: 'Ji-beu keu-re-in gan-seop ju-ui-ha-se-yo' },
+          { id: 37, category: '블록/탑재', term: '권상 시작합니다, 대피하세요', meaning: '', id_trans: 'Pengangkatan dimulai, silakan menghindar', pron: 'Gwon-sang si-jak-ham-ni-da, dae-pi-ha-se-yo' },
+          { id: 38, category: '블록/탑재', term: '블록 탑재 일정 당겨졌습니다', meaning: '', id_trans: 'Jadwal pemasangan blok dimajukan', pron: 'Beul-rok tap-jae il-jeong dang-gyeo-jyeot-seum-ni-da' }
+        ],
+        '선행의장부': [
+          { id: 1, category: '배관/설치', term: '배관 깔아', meaning: '', id_trans: 'Gelar/susun pipa', pron: 'Bae-gwan kka-ra' },
+          { id: 2, category: '배관/설치', term: '서포트 용접해', meaning: '', id_trans: 'Las tiang penyangga (support)', pron: 'Seo-po-teu yong-jeop-he' },
+          { id: 3, category: '배관/설치', term: '서포트 높이 재', meaning: '', id_trans: 'Ukur tinggi penyangga', pron: 'Seo-po-teu no-pi jae' },
+          { id: 4, category: '배관/설치', term: '밸브 방향 봐', meaning: '', id_trans: 'Perhatikan arah katup (valve)', pron: 'Bael-beu bang-hyang bwa' },
+          { id: 5, category: '배관/설치', term: '니플 빼', meaning: '매니폴더에서 호스 분리해', id_trans: 'Lepaskan konektor (nipple) selang dari manifold', pron: 'Ni-peul ppae' },
+          { id: 6, category: '배관/설치', term: '파이프 캡 씌워', meaning: '', id_trans: 'Pasang penutup (cap) pipa', pron: 'Pa-i-peu kaep ssi-wo' },
+          { id: 7, category: '배관/설치', term: '파이프 끝 테이핑해', meaning: '', id_trans: 'Pasang lakban di ujung pipa', pron: 'Pa-i-peu kkeut te-i-ping-he' },
+          { id: 8, category: '배관/설치', term: '파이프 길이 재봐', meaning: '', id_trans: 'Ukur panjang pipa', pron: 'Pa-i-peu gi-ri jae-bwa' },
+          { id: 9, category: '배관/설치', term: '기계 수평 맞춰', meaning: '', id_trans: 'Ratakan posisi mesin', pron: 'Gi-gye su-pyeong mat-chwo' },
+          { id: 10, category: '배관/설치', term: '플랜지 맞춰', meaning: '연결판 구멍 맞춰', id_trans: 'Sejajarkan lubang flensa (flange)', pron: 'Peul-raen-ji mat-chwo' },
+          { id: 11, category: '배관/설치', term: '케이블 트레이 달아', meaning: '', id_trans: 'Pasang rak kabel (cable tray)', pron: 'Ke-i-beul teu-re-i da-ra' },
+          { id: 12, category: '배관/설치', term: '엘보 가져와', meaning: 'ㄱ자 관 가져와', id_trans: 'Bawa pipa sambungan siku (elbow L)', pron: 'El-bo ga-jyeo-wa' },
+          { id: 13, category: '배관/설치', term: '파이프 내부 청소해', meaning: '', id_trans: 'Bersihkan bagian dalam pipa', pron: 'Pa-i-peu nae-bu cheong-so-he' },
+          { id: 14, category: '배관/설치', term: '라다 설치해', meaning: '사다리 설치해', id_trans: 'Pasang tangga (ladder)', pron: 'Ra-da seol-chi-he' },
+          { id: 15, category: '배관/설치', term: '파이프 같이 들어줘', meaning: '', id_trans: 'Tolong bantu angkat pipanya bersama', pron: 'Pa-i-peu ga-chi deu-reo-jwo' },
+          { id: 16, category: '작업/취부', term: '의장품 조심해', meaning: '', id_trans: 'Hati-hati dengan perlengkapan outfitting', pron: 'Ui-jang-pum jo-sim-he' },
+          { id: 17, category: '작업/취부', term: '의장품 취부해', meaning: '', id_trans: 'Rakit perlengkapan outfitting', pron: 'Ui-jang-pum chwi-bu-he' },
+          { id: 18, category: '작업/취부', term: '나라시 해', meaning: '평평하게 정렬해 깔아', id_trans: 'Susun material dengan rata di lantai', pron: 'Na-ra-si he' },
+          { id: 19, category: '작업/취부', term: '라인 마킹해', meaning: '라인 표시선 그려', id_trans: 'Buat garis penanda (line marking)', pron: 'Ra-in ma-king-he' },
+          { id: 20, category: '작업/취부', term: '기명 붙여', meaning: '자재 이름 표시해', id_trans: 'Pasang label nama (tag) pada material', pron: 'Gi-myeong bu-chyeo' },
+          { id: 21, category: '작업/취부', term: '의장 러그 달아', meaning: '', id_trans: 'Pasang lug (kaitan crane) outfitting', pron: 'Ui-jang reo-geu da-ra' },
+          { id: 22, category: '작업/취부', term: '배관 용접사 불러', meaning: '', id_trans: 'Panggil tukang las pipa', pron: 'Bae-gwan yong-jeop-sa bul-reo' },
+          { id: 23, category: '작업/취부', term: '장비 녹 사상해', meaning: '', id_trans: 'Gerinda karat pada peralatan', pron: 'Jang-bi nok sa-sang-he' },
+          { id: 24, category: '작업/취부', term: '용접 부위 사상해', meaning: '', id_trans: 'Haluskan/gerinda area lasan', pron: 'Yong-jeop bu-wi sa-sang-he' },
+          { id: 25, category: '작업/취부', term: '주변 똥 치워', meaning: '용접 찌꺼기 치워', id_trans: 'Bersihkan terak las di sekitarnya', pron: 'Ju-byeon ttong chi-wo' },
+          { id: 26, category: '작업/취부', term: '화기 보포 깔아', meaning: '용접 시 불받이포 가져와', id_trans: 'Gelar terpal tahan api untuk mengelas', pron: 'Hwa-gi bo-po kka-ra' },
+          { id: 27, category: '작업/취부', term: '보강재 작업해라', meaning: '취부 하기 전 스트롱백 설치해', id_trans: 'Pasang penguat (strong back) sebelum merakit', pron: 'Bo-gang-jae ja-geop-hae-ra' },
+          { id: 28, category: '작업/취부', term: '리바리 불어라', meaning: '피스 제거 하세요', id_trans: 'Lepaskan piece dan semprot sisa kotorannya', pron: 'Ri-ba-ri bu-reo-ra' },
+          { id: 29, category: '작업/취부', term: '따발총 쏘지마라', meaning: '용접 짧게 끊어서 하지 마', id_trans: 'Jangan mengelas terputus-putus seperti senapan', pron: 'Tta-bal-chong sso-ji-ma-ra' },
+          { id: 30, category: '작업/취부', term: '도랑 파지마라', meaning: '오버 사상 금지', id_trans: 'Jangan menggerinda terlalu dalam', pron: 'Do-rang pa-ji-ma-ra' },
+          { id: 31, category: '작업/취부', term: '빡빡 갈아라', meaning: '힘줘서 확실하게 갈아내', id_trans: 'Gerinda dengan kuat dan bersih', pron: 'Ppak-ppak ga-ra-ra' },
+          { id: 32, category: '작업/취부', term: '떡판 쳐라', meaning: '덧판 대고 용접해', id_trans: 'Tempelkan plat tambahan lalu las', pron: 'Tteok-pan chyeo-ra' },
+          { id: 33, category: '작업/취부', term: '장비 자리 비워', meaning: '', id_trans: 'Kosongkan tempat untuk letak peralatan', pron: 'Jang-bi ja-ri bi-wo' },
+          { id: 34, category: '장비/도구', term: '볼트 너트 챙겨와', meaning: '', id_trans: 'Bawa baut dan mur', pron: 'Bol-teu neo-teu chaeng-gyeo-wa' },
+          { id: 35, category: '장비/도구', term: '자재 창고 다녀와', meaning: '', id_trans: 'Pergi ke gudang material untuk ambil barang', pron: 'Ja-jae chang-go da-nyeo-wa' },
+          { id: 36, category: '장비/도구', term: '우마 대고 뽑아내라', meaning: '론지 상하단차 작업 시 우마 이용해', id_trans: 'Taruh perancah pendek (uma) lalu atur/sesuaikan', pron: 'U-ma dae-go ppo-ba-nae-ra' },
+          { id: 37, category: '장비/도구', term: '레바 걸어서 잡다 땡겨라', meaning: '수동 견인기 걸어서 당겨', id_trans: 'Kaitkan tuas tarik manual lalu tarik', pron: 'Re-ba geo-reo-seo jap-da ttaeng-gyeo-ra' },
+          { id: 38, category: '장비/도구', term: '히빠리 가져와', meaning: '레버풀러 가져와', id_trans: 'Bawa tuas penarik (lever block) ke sini', pron: 'Hip-pa-ri ga-jyeo-wa' },
+          { id: 39, category: '장비/도구', term: '헤자 이동해라', meaning: '블록 리프트 이동해', id_trans: 'Pindahkan kendaraan pengangkat blok', pron: 'He-ja i-dong-hae-ra' },
+          { id: 40, category: '검사/기타', term: '관철 검사 받아', meaning: '', id_trans: 'Minta inspeksi pengelasan pipa', pron: 'Gwan-cheol geom-sa ba-da' },
+          { id: 41, category: '검사/기타', term: '가압 테스트해', meaning: '', id_trans: 'Lakukan uji tekanan', pron: 'Ga-ap te-seu-teu-he' },
+          { id: 42, category: '검사/기타', term: '새 도면인지 확인해', meaning: '', id_trans: 'Pastikan apakah ini gambar kerja terbaru', pron: 'Sae do-myeon-in-ji hwa-gin-he' },
+          { id: 43, category: '검사/기타', term: '오늘 대마다', meaning: '일이 연결이 안되어 퇴근 합니다', id_trans: 'Hari ini pulang cepat (standby menunggu kerjaan)', pron: 'O-neul dae-ma-da' },
+          { id: 44, category: '검사/기타', term: '아다리 걸렸다', meaning: '용접 불빛으로 눈충혈 걸렸다', id_trans: 'Sakit/merah mata karena melihat cahaya las', pron: 'A-da-ri geol-ryeot-da' },
+          { id: 45, category: '검사/기타', term: '팀장에게 보고해', meaning: '', id_trans: 'Laporkan kepada ketua tim (Team Leader)', pron: 'Tim-jang-e-ge bo-go-he' }
+        ],
+        '선행도장부': [
+          { id: 1, category: '도장/스프레이', term: '라인큐시 들어가', meaning: '도막(페인트 두께) 재봐', id_trans: 'Periksa ketebalan cat (Line QC)', pron: 'Ra-in-kyu-si deu-reo-ga' },
+          { id: 2, category: '도장/스프레이', term: '뺑끼 섞어', meaning: '페인트 섞어', id_trans: 'Campurkan cat', pron: 'Ppaeng-kki seo-kko' },
+          { id: 3, category: '도장/스프레이', term: '롤러 쳐', meaning: '롤러로 칠해', id_trans: 'Oleskan dengan rol cat', pron: 'Rol-reo chyeo' },
+          { id: 4, category: '도장/스프레이', term: '뺑기 색 확인해', meaning: '페인트 색 확인해', id_trans: 'Periksa warna cat', pron: 'Ppaeng-gi saek hwa-gin-he' },
+          { id: 5, category: '도장/스프레이', term: '홀리데이 없애', meaning: '뭉쳐서 흘러내린 자국 지워', id_trans: 'Hilangkan bekas cat yang menggumpal/menetes', pron: 'Hol-ri-de-i eop-sae' },
+          { id: 6, category: '도장/스프레이', term: '리스프레이 들어가', meaning: '다시 칠해', id_trans: 'Semprot cat ulang (respray)', pron: 'Ri-seu-peu-re-i deu-reo-ga' },
+          { id: 7, category: '도장/스프레이', term: '함 더 칠해', meaning: '한 번 더 칠해', id_trans: 'Cat sekali lagi', pron: 'Ham deo chil-he' },
+          { id: 8, category: '도장/스프레이', term: '스프레이 거리 유지해', meaning: '', id_trans: 'Jaga jarak semprotan cat', pron: 'Seu-peu-re-i geo-ri yu-ji-he' },
+          { id: 9, category: '도장/스프레이', term: '퍼스트 뿌려', meaning: '1차 도장해', id_trans: 'Lakukan pengecatan pertama (lapisan 1)', pron: 'Peo-seu-teu ppu-ryeo' },
+          { id: 10, category: '도장/스프레이', term: '세컨 뿌려', meaning: '2차 도장해', id_trans: 'Lakukan pengecatan kedua (lapisan 2)', pron: 'Se-keon ppu-ryeo' },
+          { id: 11, category: '도장/스프레이', term: '파이널 때려', meaning: '마지막 도장해', id_trans: 'Lakukan pengecatan akhir (final)', pron: 'Pa-i-neol ttae-ryeo' },
+          { id: 12, category: '도장/스프레이', term: '파이널 볼꺼니까 준비해', meaning: '마지막 검사 준비해', id_trans: 'Siapkan untuk inspeksi pengecatan akhir', pron: 'Pa-i-neol bol-kkeo-ni-kka jun-bi-he' },
+          { id: 13, category: '도장/스프레이', term: '오토 롤라 시작해', meaning: '기계 롤러로 칠해', id_trans: 'Mulai rol cat mesin otomatis', pron: 'O-to rol-ra si-jak-he' },
+          { id: 14, category: '도장/스프레이', term: '스프레이 터치업 시작해', meaning: '스프레이로 부분 칠해', id_trans: 'Mulai semprot cat sentuh ulang (touch-up)', pron: 'Seu-peu-re-i teo-chi-eop si-jak-he' },
+          { id: 15, category: '도장/스프레이', term: '4인치 작업해', meaning: '4인치 롤러로 칠해', id_trans: 'Bekerjalah menggunakan rol 4 inci', pron: 'Sa-in-chi ja-geop-he' },
+          { id: 16, category: '도장/스프레이', term: '베이비로 발라', meaning: '작은 롤러로 칠해', id_trans: 'Gunakan rol kecil untuk mengecat', pron: 'Be-i-bi-ro bal-ra' },
+          { id: 17, category: '전처리/표면', term: '빠데 발라', meaning: '파인 곳 퍼티로 메꿔', id_trans: 'Oleskan dempul (putty) di celah', pron: 'Ppa-de bal-ra' },
+          { id: 18, category: '전처리/표면', term: '빼빠 쳐', meaning: '사포로 갈아', id_trans: 'Gosok dengan amplas', pron: 'Ppae-ppa chyeo' },
+          { id: 19, category: '전처리/표면', term: '클리닝 들어가', meaning: '청소해', id_trans: 'Mulai proses pembersihan (cleaning)', pron: 'Keul-ri-ning deu-reo-ga' },
+          { id: 20, category: '전처리/표면', term: '블로홀 빠데 작업해', meaning: '기포 구멍에 퍼티 발라', id_trans: 'Dempul bagian lubang gelembung udara', pron: 'Beul-ro-hol ppa-de ja-geop-he' },
+          { id: 21, category: '전처리/표면', term: '녹 까고 징크 발라', meaning: '녹 벗기고 아연 페인트 칠해', id_trans: 'Kupas karat lalu oleskan cat zinc', pron: 'Nok kka-go jing-keu bal-ra' },
+          { id: 22, category: '전처리/표면', term: '해바라기 써', meaning: '연마 사포(해바라기) 써', id_trans: 'Gunakan piringan amplas (flap disc)', pron: 'He-ba-ra-gi sseo' },
+          { id: 23, category: '전처리/표면', term: '샌딩 치고 있어', meaning: '', id_trans: 'Sedang melakukan sandblasting', pron: 'Saen-ding chi-go it-seo' },
+          { id: 24, category: '전처리/표면', term: '바큠 해', meaning: '진공청소기로 청소해', id_trans: 'Sedot debunya (vacuum)', pron: 'Ba-kyum he' },
+          { id: 25, category: '장비/재료', term: '신나 가져와', meaning: '페인트 희석제 가져와', id_trans: 'Bawa pengencer cat (thinner)', pron: 'Sin-na ga-jyeo-wa' },
+          { id: 26, category: '장비/재료', term: '도장 호스 청소해', meaning: '', id_trans: 'Bersihkan selang cat', pron: 'Do-jang ho-seu cheong-so-he' },
+          { id: 27, category: '장비/재료', term: '총 확인해', meaning: '스프레이 건 확인해', id_trans: 'Periksa pistol penyemprot cat (spray gun)', pron: 'Chong hwa-gin-he' },
+          { id: 28, category: '장비/재료', term: '마스킹 해', meaning: '', id_trans: 'Pasang selotip pelindung (masking)', pron: 'Ma-seu-king he' },
+          { id: 29, category: '장비/재료', term: '테이핑 해', meaning: '', id_trans: 'Pasang selotip/lakban', pron: 'Te-i-ping he' },
+          { id: 30, category: '장비/재료', term: '도막 측정기 가져와', meaning: '페인트 두께 재는 장비 가져와', id_trans: 'Bawa alat pengukur ketebalan cat', pron: 'Do-mak cheuk-jeong-gi ga-jyeo-wa' },
+          { id: 31, category: '장비/재료', term: '훗까시 해', meaning: '압력으로 찌꺼기 불어내', id_trans: 'Tembak tekanan angin untuk bersihkan pipa', pron: 'Hut-kka-si he' },
+          { id: 32, category: '장비/재료', term: '신나 냄새 조심해', meaning: '희석제 가스 조심해', id_trans: 'Hati-hati gas/bau thinner', pron: 'Sin-na naem-sae jo-sim-he' },
+          { id: 33, category: '장비/재료', term: '페인트 보관함 정리해', meaning: '', id_trans: 'Rapikan lemari penyimpanan cat', pron: 'Pe-in-teu bo-gwan-ham jeong-ri-he' },
+          { id: 34, category: '장비/재료', term: '팁 가이드 확인해', meaning: '건 앞부분 안전 캡 확인해', id_trans: 'Periksa tutup pengaman depan spray gun', pron: 'Tip ga-i-deu hwa-gin-he' },
+          { id: 35, category: '장비/재료', term: '팁 가드 확인해', meaning: '건 앞부분 안전 캡 확인해', id_trans: 'Periksa tutup pelindung nozzle (tip guard)', pron: 'Tip ga-deu hwa-gin-he' },
+          { id: 36, category: '작업/구역', term: '데나 보고와', meaning: '수정 작업 확인하고 와', id_trans: 'Pergi lihat status perbaikan (rework) lalu kembali', pron: 'De-na bo-go-wa' },
+          { id: 37, category: '작업/구역', term: '도장 구역 출입 금지해', meaning: '', id_trans: 'Dilarang masuk area pengecatan', pron: 'Do-jang gu-yeok chu-rip geum-ji-he' },
+          { id: 38, category: '작업/구역', term: '정전기 화재 조심해', meaning: '', id_trans: 'Hati-hati kebakaran akibat listrik statis', pron: 'Jeong-jeon-gi hwa-jae jo-sim-he' },
+          { id: 39, category: '작업/구역', term: '알잘딱해', meaning: '알아서 잘 깔끔하게 해', id_trans: 'Kerjakan secara mandiri dengan rapi dan baik', pron: 'Al-jal-ttak-he' },
+          { id: 40, category: '작업/구역', term: 'A라인에 있어', meaning: '', id_trans: 'Sedang ada di Line A', pron: 'E-i ra-in-e it-seo' },
+          { id: 41, category: '작업/구역', term: '셀장 들어가', meaning: '블라스팅장 들어가', id_trans: 'Masuk ke bengkel sandblasting (Cell)', pron: 'Sel-jang deu-reo-ga' },
+          { id: 42, category: '작업/구역', term: '샵 들어가', meaning: '페인트 도장장 들어가', id_trans: 'Masuk ke bengkel pengecatan (Shop)', pron: 'Syap deu-reo-ga' },
+          { id: 43, category: '작업/구역', term: '셀타 들어가', meaning: '쉘터 구역 들어가', id_trans: 'Masuk ke area Shelter (Pelindung)', pron: 'Sel-ta deu-reo-ga' },
+          { id: 44, category: '작업/구역', term: '1번에 있어', meaning: '1번 구역에 있어', id_trans: 'Sedang ada di area nomor 1', pron: 'Il-beon-e it-seo' },
+          { id: 45, category: '작업/구역', term: '오버헤드 작업이야 안경써', meaning: '머리 위 작업이니까 보안경 써', id_trans: 'Ini pekerjaan di atas kepala, pakai kacamata pelindung', pron: 'O-beo-he-deu ja-geo-bi-ya an-gyeong-sseo' },
+          { id: 46, category: '작업/구역', term: '물팀 조출했어', meaning: '물청소 팀 일찍 출근했어', id_trans: 'Tim pencuci air sudah datang lebih awal', pron: 'Mul-tim jo-chul-haet-seo' },
+          { id: 47, category: '작업/구역', term: '물반장한테 물어봐', meaning: '물청소 반장한테 물어봐', id_trans: 'Coba tanyakan pada mandor pencuci air', pron: 'Mul-ban-jang-han-te mu-reo-bwa' }
+        ],
+        '의장부': [
+          { id: 1, category: '배관/연결', term: '밸브 오픈 확인해', meaning: '', id_trans: 'Periksa apakah katup (valve) terbuka', pron: 'Bael-beu o-peun hwa-gin-he' },
+          { id: 2, category: '배관/연결', term: '밸브 클로즈 확인해', meaning: '', id_trans: 'Periksa apakah katup tertutup', pron: 'Bael-beu keul-ro-jeu hwa-gin-he' },
+          { id: 3, category: '배관/연결', term: '배관 연결 확인해', meaning: '', id_trans: 'Periksa sambungan pipa', pron: 'Bae-gwan yeon-gyeol hwa-gin-he' },
+          { id: 4, category: '배관/연결', term: '덕트 연결해', meaning: '환기 통로 연결해', id_trans: 'Sambungkan saluran ventilasi (duct)', pron: 'Deok-teu yeon-gyeol-he' },
+          { id: 5, category: '배관/연결', term: '소화 배관 설치해', meaning: 'FIRE LINE 설치해', id_trans: 'Pasang pipa pemadam kebakaran (Fire line)', pron: 'So-hwa bae-gwan seol-chi-he' },
+          { id: 6, category: '배관/연결', term: '유압 호스 연결해', meaning: '', id_trans: 'Sambungkan selang hidrolik', pron: 'Yu-ap ho-seu yeon-gyeol-he' },
+          { id: 7, category: '배관/연결', term: '파이프 보온해', meaning: '', id_trans: 'Pasang insulasi (pembungkus) pipa', pron: 'Pa-i-peu bo-on-he' },
+          { id: 8, category: '배관/연결', term: '플러싱 해', meaning: '관 내부 청소 해', id_trans: 'Bilas bagian dalam pipa (Flushing)', pron: 'Peul-reo-sing he' },
+          { id: 9, category: '배관/연결', term: '에어 호스 연결해', meaning: '', id_trans: 'Sambungkan selang udara', pron: 'E-eo ho-seu yeon-gyeol-he' },
+          { id: 10, category: '배관/연결', term: '절단 호스 연결해', meaning: '', id_trans: 'Sambungkan selang mesin potong', pron: 'Jeol-dan ho-seu yeon-gyeol-he' },
+          { id: 11, category: '전장/장비', term: '포설해', meaning: '케이블 인입해', id_trans: 'Tarik/gelar kabel (cable pulling)', pron: 'Po-seol-he' },
+          { id: 12, category: '전장/장비', term: '케이블 타이 묶어', meaning: '', id_trans: 'Ikat kabel dengan cable tie', pron: 'Ke-i-beul ta-i mu-kko' },
+          { id: 13, category: '전장/장비', term: '발전기 확인해', meaning: '', id_trans: 'Periksa generator (genset)', pron: 'Bal-jeon-gi hwa-gin-he' },
+          { id: 14, category: '전장/장비', term: '외부 전원 연결해', meaning: '', id_trans: 'Sambungkan sumber daya listrik dari luar', pron: 'We-bu jeon-won yeon-gyeol-he' },
+          { id: 15, category: '전장/장비', term: '레벨 센서 달아', meaning: '', id_trans: 'Pasang sensor batas air (level sensor)', pron: 'Re-bel sen-seo da-ra' },
+          { id: 16, category: '전장/장비', term: '전등 켜봐', meaning: '', id_trans: 'Coba nyalakan lampu', pron: 'Jeon-deung kyeo-bwa' },
+          { id: 17, category: '설치/작업', term: '장비 보호커버 씌우자', meaning: '', id_trans: 'Ayo pasang penutup pelindung peralatan', pron: 'Jang-bi bo-ho-keo-beo ssi-u-ja' },
+          { id: 18, category: '설치/작업', term: '서포트 위치 확인해', meaning: '', id_trans: 'Periksa posisi dudukan penyangga (support)', pron: 'Seo-po-teu wi-chi hwa-gin-he' },
+          { id: 19, category: '설치/작업', term: '그레이팅 깔아', meaning: '발빠짐 방지판 설치하자', id_trans: 'Pasang pelat lantai besi berongga (grating)', pron: 'Geu-re-i-ting kka-ra' },
+          { id: 20, category: '설치/작업', term: '핸드레일 용접해', meaning: '난간대 용접해', id_trans: 'Las pegangan tangan tangga (handrail)', pron: 'Haen-deu-re-il yong-jeop-he' },
+          { id: 21, category: '설치/작업', term: 'Life Boat 설치해', meaning: '구명정 설치해', id_trans: 'Pasang sekoci penyelamat (Life Boat)', pron: 'Ra-i-peu bo-teu seol-chi-he' },
+          { id: 22, category: '설치/작업', term: '끝단 처리해', meaning: '날카롭지 않게 잘 마모해', id_trans: 'Haluskan bagian pinggir/sudut agar tidak tajam', pron: 'Kkeut-dan cheo-ri-he' },
+          { id: 23, category: '설치/작업', term: '장비 베이스 고정해', meaning: '', id_trans: 'Kencangkan dudukan alas peralatan', pron: 'Jang-bi be-i-seu go-jeong-he' },
+          { id: 24, category: '설치/작업', term: '유니트 탑재해', meaning: '', id_trans: 'Angkat dan pasang unit perlengkapan (Unit)', pron: 'Yu-ni-teu tap-jae-he' },
+          { id: 25, category: '설치/작업', term: '장비 탑재해', meaning: '', id_trans: 'Angkat dan pasang peralatan', pron: 'Jang-bi tap-jae-he' },
+          { id: 26, category: '볼팅/체결', term: '볼트 챙겨와', meaning: '', id_trans: 'Bawa baut ke sini', pron: 'Bol-teu chaeng-gyeo-wa' },
+          { id: 27, category: '볼팅/체결', term: '임팩트 가져와', meaning: '', id_trans: 'Bawa mesin pembuka baut (impact wrench)', pron: 'Im-paek-teu ga-jyeo-wa' },
+          { id: 28, category: '볼팅/체결', term: '토크 값 확인해', meaning: '볼트 조임 힘 확인해', id_trans: 'Periksa nilai kekuatan torsi baut (Torque)', pron: 'To-keu gap hwa-gin-he' },
+          { id: 29, category: '볼팅/체결', term: '볼트 걸어', meaning: '손으로 볼트를 살짝 끼워둬', id_trans: 'Pasang/putar baut sedikit dengan tangan', pron: 'Bol-teu geo-reo' },
+          { id: 30, category: '볼팅/체결', term: '홀 맞춰', meaning: '볼트 구멍끼리 일치시켜', id_trans: 'Sejajarkan/paskan lubang baut', pron: 'Hol mat-chwo' },
+          { id: 31, category: '볼팅/체결', term: '임팩트로 조여', meaning: '최종적으로 볼팅해', id_trans: 'Kencangkan dengan impact wrench', pron: 'Im-paek-teu-ro jo-yeo' },
+          { id: 32, category: '볼팅/체결', term: '반대편 잡아', meaning: '(볼트 조일 때) 반대쪽 너트가 돌아가지 않게 잡아', id_trans: 'Tahan/pegang mur di sisi yang berlawanan', pron: 'Ban-dae-pyeon ja-ba' },
+          { id: 33, category: '볼팅/체결', term: '풀어', meaning: '(볼팅 잘못됐을 때) 다시 풀어', id_trans: 'Lepaskan/buka bautnya', pron: 'Pu-reo' },
+          { id: 34, category: '도구/자재', term: '구리스 발라', meaning: '윤활제 도포해', id_trans: 'Oleskan pelumas (gemuk/grease)', pron: 'Gu-ri-seu bal-ra' },
+          { id: 35, category: '도구/자재', term: '테이프 감아', meaning: '', id_trans: 'Lilitkan selotip (teflon tape)', pron: 'Te-i-peu ga-ma' },
+          { id: 36, category: '도구/자재', term: '자재 신청해', meaning: '', id_trans: 'Daftarkan permintaan material baru', pron: 'Ja-jae sin-cheong-he' },
+          { id: 37, category: '도구/자재', term: '기명제 실시해', meaning: '이름 작성하자', id_trans: 'Tuliskan nama pada alat masing-masing', pron: 'Gi-myeong-je sil-si-he' },
+          { id: 38, category: '도구/자재', term: '공구 가져와', meaning: '', id_trans: 'Bawa perkakas/alatnya', pron: 'Gong-gu ga-jyeo-wa' },
+          { id: 39, category: '도구/자재', term: '공구실 다녀와', meaning: '', id_trans: 'Pergi ke ruang alat (tool room) untuk ambil alat', pron: 'Gong-gu-sil da-nyeo-wa' },
+          { id: 40, category: '도구/자재', term: '마킹펜 가져와', meaning: '(체결 완료 후 자주검사 체크표시를 위해)마킹펜 가져와', id_trans: 'Bawa spidol/pena penanda (marking pen)', pron: 'Ma-king-pen ga-jyeo-wa' },
+          { id: 41, category: '검사/확인', term: '의장 검사 받아', meaning: '의장품 설치 및 작동 검사 받아', id_trans: 'Minta inspeksi perlengkapan outfitting', pron: 'Ui-jang geom-sa ba-da' },
+          { id: 42, category: '검사/확인', term: '호선 번호 확인해', meaning: '', id_trans: 'Periksa nomor lambung kapal', pron: 'Ho-seon beon-ho hwa-gin-he' },
+          { id: 43, category: '검사/확인', term: '이면 확인해', meaning: '뒷면 확인해', id_trans: 'Periksa sisi bagian belakang', pron: 'I-myeon hwa-gin-he' },
+          { id: 44, category: '검사/확인', term: '개정도 확인해', meaning: '변경 도면 확인해', id_trans: 'Periksa revisi gambar terbaru', pron: 'Gae-jeong-do hwa-gin-he' },
+          { id: 45, category: '검사/확인', term: '압력 게이지 확인해', meaning: '', id_trans: 'Periksa alat pengukur tekanan (pressure gauge)', pron: 'Ap-ryeok ge-i-ji hwa-gin-he' },
+          { id: 46, category: '검사/확인', term: '유격 봐봐', meaning: '배관사이 간격이 적당한지 확인해', id_trans: 'Periksa celah kelonggaran (jarak antar pipa)', pron: 'Yu-gyeok bwa-bwa' },
+          { id: 47, category: '구역/환경', term: '8275호선 들어가', meaning: '0000호선(작업호선) 들어가', id_trans: 'Masuk ke kapal nomor lambung 8275 (contoh)', pron: 'Pal-i-chil-o ho-seon deu-reo-ga' },
+          { id: 48, category: '구역/환경', term: '엔진룸 이동해', meaning: '', id_trans: 'Pindah ke ruang mesin', pron: 'En-jin-rum i-dong-he' },
+          { id: 49, category: '구역/환경', term: '작업 자리 청소해', meaning: '', id_trans: 'Bersihkan tempat bekerja', pron: 'Ja-geop ja-ri cheong-so-he' },
+          { id: 50, category: '작업/기타', term: 'LUG를 공기구를 이용해서 잘라', meaning: '', id_trans: 'Potong LUG menggunakan alat pneumatik/angin', pron: 'Reo-geu-reul gong-gi-gu-ro i-yong-hae-seo jal-ra' },
+          { id: 51, category: '작업/기타', term: '야간 작업 교대해', meaning: '', id_trans: 'Serah terima pergantian shift malam', pron: 'Ya-gan ja-geop gyo-dae-he' },
+          { id: 52, category: '작업/기타', term: '조금만 들어봐', meaning: '', id_trans: 'Coba angkat sedikit', pron: 'Jo-geum-man deu-reo-bwa' },
+          { id: 53, category: '작업/기타', term: '불받이 설치해', meaning: '(용접 작업 준비 시)불받이 설치해', id_trans: 'Pasang terpal penahan api', pron: 'Bul-ba-ji seol-chi-he' }
+        ],
+        '건조부': [
+          { id: 1, category: '탑재/조립', term: '블록 탑재해', meaning: '', id_trans: 'Angkat dan pasang blok ke kapal', pron: 'Beul-rok tap-jae-he' },
+          { id: 2, category: '탑재/조립', term: '반목 확인해', meaning: '', id_trans: 'Periksa kayu penyangga/dudukan blok', pron: 'Ban-mok hwa-gin-he' },
+          { id: 3, category: '탑재/조립', term: '도크 이동해', meaning: '', id_trans: 'Pindah ke area Dock', pron: 'Do-keu i-dong-he' },
+          { id: 4, category: '탑재/조립', term: '수평 맞춰', meaning: '선체 수평 맞춰', id_trans: 'Ratakan posisi lambung kapal (leveling)', pron: 'Su-pyeong mat-chwo' },
+          { id: 5, category: '검사/테스트', term: '탱크 테스트 해', meaning: '', id_trans: 'Lakukan tes tekanan tangki', pron: 'Taeng-keu te-seu-teu he' },
+          { id: 6, category: '탑재/조립', term: '족장 설치 상태 확인해', meaning: '발판 설치 확인해', id_trans: 'Periksa status pemasangan perancah (scaffolding)', pron: 'Jok-jang seol-chi sang-tae hwa-gin-he' },
+          { id: 7, category: '탑재/조립', term: '취부 작업 시작해', meaning: '', id_trans: 'Mulai pekerjaan perakitan/penyetelan besi', pron: 'Chwi-bu ja-geop si-jak-he' },
+          { id: 8, category: '정리/청소', term: '어퍼데크 청소해', meaning: '', id_trans: 'Bersihkan dek bagian atas (Upper deck)', pron: 'Eo-peo-de-keu cheong-so-he' },
+          { id: 9, category: '정리/청소', term: '마이존 구역 청소해', meaning: '', id_trans: 'Bersihkan area zonamu sendiri', pron: 'Ma-i-jon gu-yeok cheong-so-he' },
+          { id: 10, category: '탑재/조립', term: '블럭간 갭상태 확인해', meaning: '블록 간격 측정해', id_trans: 'Periksa dan ukur celah (gap) antar blok', pron: 'Beul-reok-gan gaep-sang-tae hwa-gin-he' },
+          { id: 11, category: '크레인/장비', term: '크레인 신호 확인해', meaning: '', id_trans: 'Periksa sinyal dari pandu crane', pron: 'Keu-re-in sin-ho hwa-gin-he' },
+          { id: 12, category: '탑재/조립', term: '유압 잭 높이 맞춰', meaning: '', id_trans: 'Sesuaikan tinggi dongkrak hidrolik', pron: 'Yu-ap jaek no-pi mat-chwo' },
+          { id: 13, category: '작업/이동', term: '본선 승선해', meaning: '', id_trans: 'Naiklah ke kapal utama', pron: 'Bon-seon seung-seon-he' },
+          { id: 14, category: '안전/설비', term: '사다리 고정해', meaning: '', id_trans: 'Kencangkan tangga dengan aman', pron: 'Sa-da-ri go-jeong-he' },
+          { id: 15, category: '탑재/조립', term: '로드아웃 준비해', meaning: '진수 준비해', id_trans: 'Persiapkan pemindahan kapal (Load-out)', pron: 'Ro-deu-a-ut jun-bi-he' },
+          { id: 16, category: '정리/청소', term: '탱크 내부 청소해', meaning: '', id_trans: 'Bersihkan bagian dalam tangki', pron: 'Taeng-keu nae-bu cheong-so-he' },
+          { id: 17, category: '검사/용접', term: '화기작업 이면 확인해', meaning: '', id_trans: 'Periksa sisi belakang area pengelasan/pemanasan', pron: 'Hwa-gi-ja-geop i-myeon hwa-gin-he' },
+          { id: 18, category: '도면/확인', term: '도면 가져와', meaning: '', id_trans: 'Bawa gambar kerjanya', pron: 'Do-myeon ga-jyeo-wa' },
+          { id: 19, category: '탑재/조립', term: '선미에서 선수쪽으로 작업해', meaning: '', id_trans: 'Bekerja dari buritan ke arah haluan', pron: 'Seon-mi-e-seo seon-su-jjok-eu-ro ja-geop-he' },
+          { id: 20, category: '탑재/조립', term: '선수에서 선미쪽으로 작업해', meaning: '', id_trans: 'Bekerja dari haluan ke arah buritan', pron: 'Seon-su-e-seo seon-mi-jjok-eu-ro ja-geop-he' },
+          { id: 21, category: '탑재/조립', term: '중앙부 확인 후 작업해', meaning: '', id_trans: 'Periksa bagian tengah (center) sebelum bekerja', pron: 'Jung-ang-bu hwa-gin hu ja-geop-he' },
+          { id: 22, category: '탑재/조립', term: '버쓰 바닥 마킹해', meaning: '', id_trans: 'Buat penanda (marking) di lantai Berth', pron: 'Beo-sseu ba-dak ma-king-he' },
+          { id: 23, category: '안전/보호구', term: '고소작업 벨트 채워', meaning: '', id_trans: 'Pakai sabuk pengaman untuk kerja di ketinggian', pron: 'Go-so-ja-geop bel-teu chae-wo' },
+          { id: 24, category: '탑재/조립', term: '족장 해체해', meaning: '발판 해체해', id_trans: 'Bongkar perancah (scaffolding)', pron: 'Jok-jang hae-che-he' },
+          { id: 25, category: '작업/환경', term: '환기팬 설치 후 작업해', meaning: '', id_trans: 'Mulai bekerja setelah memasang kipas ventilasi', pron: 'Hwan-gi-paen seol-chi hu ja-geop-he' },
+          { id: 26, category: '크레인/장비', term: '크레인 신호수 불러와', meaning: '', id_trans: 'Panggil petugas pemberi sinyal crane ke sini', pron: 'Keu-re-in sin-ho-su bul-reo-wa' },
+          { id: 27, category: '안전/수칙', term: '낙하물 주의해', meaning: '', id_trans: 'Perhatikan barang yang jatuh dari atas', pron: 'Nak-ha-mul ju-ui-he' },
+          { id: 28, category: '정리/청소', term: '시마이해', meaning: '일 마무리해', id_trans: 'Selesaikan/tutup pekerjaan hari ini', pron: 'Si-ma-i-he' },
+          { id: 29, category: '작업/이동', term: '족장 상부 건조 작업해', meaning: '', id_trans: 'Lakukan pekerjaan di area atas perancah', pron: 'Jok-jang sang-bu geon-jo ja-geop-he' },
+          { id: 30, category: '수정/사상', term: '선체 외부 사상해', meaning: '선체 외부 그라인딩 해', id_trans: 'Gerinda bagian luar lambung kapal', pron: 'Seon-che we-bu sa-sang-he' },
+          { id: 31, category: '정리/청소', term: '용접기 정리정돈해', meaning: '', id_trans: 'Rapikan peralatan mesin las', pron: 'Yong-jeop-gi jeong-ri-jeong-don-he' },
+          { id: 32, category: '전장/설비', term: '본선 조명 설치해', meaning: '', id_trans: 'Pasang lampu penerangan di dalam kapal', pron: 'Bon-seon jo-myeong seol-chi-he' },
+          { id: 33, category: '안전/설비', term: '탱크 맨홀 잠궈', meaning: '탱크 맨홀 잠금장치 해', id_trans: 'Kunci lubang masuk (manhole) tangki', pron: 'Taeng-keu maen-hol jam-gwo' },
+          { id: 34, category: '작업/환경', term: '탱크 배수해', meaning: '', id_trans: 'Kuras air dari dalam tangki', pron: 'Taeng-keu bae-su-he' },
+          { id: 35, category: '통신/보고', term: '무전기 통신해', meaning: '', id_trans: 'Berkomunikasilah via HT (Walkie-talkie)', pron: 'Mu-jeon-gi tong-sin-he' },
+          { id: 36, category: '안전/수칙', term: '작업장 내 금연해', meaning: '', id_trans: 'Dilarang merokok di area tempat kerja', pron: 'Ja-geop-jang nae geum-yeon-he' },
+          { id: 37, category: '작업/주의', term: '페인트 데미지 주의해', meaning: '', id_trans: 'Hati-hati jangan sampai catnya tergores/rusak', pron: 'Pe-in-teu de-mi-ji ju-ui-he' },
+          { id: 38, category: '통신/보고', term: '야간 작업자 기록해', meaning: '', id_trans: 'Catat daftar pekerja lembur malam', pron: 'Ya-gan ja-geop-ja gi-rok-he' },
+          { id: 39, category: '크레인/장비', term: '달줄 이용해서 장비 이동해', meaning: '', id_trans: 'Pindahkan peralatan menggunakan tali derek', pron: 'Dal-jul i-yong-hae-seo jang-bi i-dong-he' },
+          { id: 40, category: '통신/보고', term: '작업 블록 기록해', meaning: '', id_trans: 'Catat nomor blok yang sedang dikerjakan', pron: 'Ja-geop beul-rok gi-rok-he' },
+          { id: 41, category: '검사/테스트', term: '탱크 에어 테스트 해', meaning: '', id_trans: 'Lakukan uji tekanan udara pada tangki', pron: 'Taeng-keu e-eo te-seu-teu he' },
+          { id: 42, category: '안전/설비', term: '엘리베이터 점검해', meaning: '', id_trans: 'Periksa kondisi lift', pron: 'El-ri-be-i-teo jeom-geom-he' },
+          { id: 43, category: '수정/사상', term: '용접 부위 녹 제거해', meaning: '', id_trans: 'Bersihkan karat di area pengelasan', pron: 'Yong-jeop bu-wi nok je-geo-he' },
+          { id: 44, category: '안전/수칙', term: '안전 점검해', meaning: '', id_trans: 'Lakukan pemeriksaan keselamatan', pron: 'An-jeon jeom-geom-he' },
+          { id: 45, category: '작업/주의', term: '프로펠러 보호해', meaning: '', id_trans: 'Lindungi area baling-baling kapal (propeller)', pron: 'Peu-ro-pel-reo bo-ho-he' },
+          { id: 46, category: '안전/수칙', term: '지게차 조심해', meaning: '', id_trans: 'Hati-hati ada forklift lewat', pron: 'Ji-ge-cha jo-sim-he' },
+          { id: 47, category: '통신/보고', term: '작업 완료 보고해', meaning: '', id_trans: 'Laporkan jika pekerjaan sudah selesai', pron: 'Ja-geop wal-ryo bo-go-he' },
+          { id: 48, category: '정리/청소', term: '작업 끝나면 청소해', meaning: '', id_trans: 'Bersihkan area jika pekerjaan selesai', pron: 'Ja-geop kkeut-na-myeon cheong-so-he' },
+          { id: 49, category: '안전/수칙', term: '미끄럼 주의해', meaning: '', id_trans: 'Hati-hati lantai licin', pron: 'Mi-kkeu-reom ju-ui-he' },
+          { id: 50, category: '안전/설비', term: '이탈방지 와이어 설치해', meaning: '', id_trans: 'Pasang kawat baja pelindung jatuh (anti-lepas)', pron: 'I-tal-bang-ji wa-i-eo seol-chi-he' },
+          { id: 51, category: '용접/작업', term: '피스 라운드 용접해', 해: '', id_trans: 'Las bo-bulat (round) pada piece bantu', pron: 'Pi-seu ra-un-deu yong-jeop-he' },
+          { id: 52, category: '용접/작업', term: '그라인딩 후 피스 용접해', meaning: '', id_trans: 'Gerinda dulu permukaannya, lalu las piece', pron: 'Geu-ra-in-ding hu pi-seu yong-jeop-he' },
+          { id: 53, category: '정리/청소', term: '호스류 정리정돈해', meaning: '', id_trans: 'Rapikan semua jenis selang-selang', pron: 'Ho-seu-ryu jeong-ri-jeong-don-he' },
+          { id: 54, category: '안전/보호구', term: '개인장비 점검해', meaning: '', id_trans: 'Periksa kelengkapan peralatan pribadi', pron: 'Gae-in-jang-bi jeom-geom-he' },
+          { id: 55, category: '정리/청소', term: '5S 점검해', meaning: '툴박스 정리정돈하고 청소해', id_trans: 'Periksa 5S (Ringkas, Rapi, Resik...)', pron: 'O-e-seu jeom-geom-he' },
+          { id: 56, category: '안전/수칙', term: '화재위험에 대비해', meaning: '', id_trans: 'Berjaga-jagalah terhadap risiko kebakaran', pron: 'Hwa-jae-wi-heom-e dae-bi-he' },
+          { id: 57, category: '안전/수칙', term: '이동시 주의확인', meaning: '', id_trans: 'Perhatikan dan amati saat berpindah tempat', pron: 'I-dong-si ju-ui-hwa-gin' },
+          { id: 58, category: '안전/수칙', term: '블록 밑으로 이동 주의해', meaning: '', id_trans: 'Hati-hati saat berjalan di bawah blok yang tergantung', pron: 'Beul-rok mi-teu-ro i-dong ju-ui-he' },
+          { id: 59, category: '정리/청소', term: '마이존 청소해', meaning: '', id_trans: 'Bersihkan area zona kerjamu sendiri', pron: 'Ma-i-jon cheong-so-he' },
+          { id: 60, category: '안전/수칙', term: '3타점 준수해', meaning: '사다리 탈 때 세 곳 지지해', id_trans: 'Patuhi aturan 3 titik tumpu (saat naik tangga)', pron: 'Sam-ta-jeom jun-su-he' },
+          { id: 61, category: '안전/수칙', term: '뒷걸음질 금지해', meaning: '', id_trans: 'Dilarang keras berjalan mundur', pron: 'Dwit-geo-reum-jil geum-ji-he' },
+          { id: 62, category: '크레인/장비', term: '자재 탑재해', meaning: '', id_trans: 'Angkat dan muat material', pron: 'Ja-jae tap-jae-he' },
+          { id: 63, category: '안전/보호구', term: '보호구 착용해', meaning: '', id_trans: 'Pakai perlengkapan alat pelindung', pron: 'Bo-ho-gu chak-yong-he' },
+          { id: 64, category: '통신/보고', term: 'TBM 전산 등록해', meaning: 'TBM(Tool Box Meeting) 전산 등록 해', id_trans: 'Daftarkan data TBM ke sistem komputer', pron: 'Ti-bi-em jeon-san deung-nok-he' },
+          { id: 65, category: '통신/보고', term: '작업지시 전산 확인해', meaning: '', id_trans: 'Periksa instruksi kerja di sistem komputer', pron: 'Ja-geop-ji-si jeon-san hwa-gin-he' },
+          { id: 66, category: '안전/보호구', term: '안전모 착용해', meaning: '', id_trans: 'Pakai helm keselamatan', pron: 'An-jeon-mo chak-yong-he' },
+          { id: 67, category: '안전/보호구', term: '안전벨트 체결해', meaning: '', id_trans: 'Kencangkan sabuk pengaman tubuh (harness)', pron: 'An-jeon-bel-teu che-gyeol-he' },
+          { id: 68, category: '안전/보호구', term: '보안경 착용해', meaning: '', id_trans: 'Pakai kacamata pelindung', pron: 'Bo-an-gyeong chak-yong-he' },
+          { id: 69, category: '안전/보호구', term: '귀마개 착용해', meaning: '', id_trans: 'Pakai penutup telinga (earplug)', pron: 'Gwi-ma-ge chak-yong-he' },
+          { id: 70, category: '안전/수칙', term: '발판 조심해', meaning: '', id_trans: 'Hati-hati papan pijakan (perancah)', pron: 'Bal-pan jo-sim-he' },
+          { id: 71, category: '탑재/조립', term: '서포트 설치해', meaning: '', id_trans: 'Pasang tiang penyangga (support)', pron: 'Seo-po-teu seol-chi-he' },
+          { id: 72, category: '안전/수칙', term: '낙하물 조심해', meaning: '', id_trans: 'Hati-hati benda yang bisa jatuh', pron: 'Nak-ha-mul jo-sim-he' },
+          { id: 73, category: '안전/수칙', term: '추락 조심해', meaning: '', id_trans: 'Hati-hati risiko jatuh', pron: 'Chu-rak jo-sim-he' },
+          { id: 74, category: '안전/수칙', term: '난간을 잡아', meaning: '핸드레일 잡아', id_trans: 'Pegang pagar pelindung (railing)', pron: 'Nan-gan-eul ja-ba' },
+          { id: 75, category: '작업/이동', term: '사다리 올라가', meaning: '', id_trans: 'Naik tangga', pron: 'Sa-da-ri ol-ra-ga' },
+          { id: 76, category: '안전/수칙', term: '맨홀 주의해', meaning: '', id_trans: 'Hati-hati lubang masuk bawah tanah (manhole)', pron: 'Maen-hol ju-ui-he' },
+          { id: 77, category: '안전/수칙', term: 'TMH 주의해', meaning: 'TMH(Temporary Man Hole) 주의해', id_trans: 'Hati-hati lubang masuk sementara (TMH)', pron: 'Ti-em-e-i-chi ju-ui-he' }
+        ],
+        '선실생산부': [
+          { id: 1, category: '인테리어/마감', term: '천장 실링 판넬 설치해', meaning: '', id_trans: 'Pasang panel plafon (ceiling)', pron: 'Cheon-jang sil-ring pan-nel seol-chi-he' },
+          { id: 2, category: '인테리어/마감', term: '바닥 타일 작업해', meaning: '', id_trans: 'Kerjakan pemasangan ubin/keramik lantai', pron: 'Ba-dak ta-il ja-geop-he' },
+          { id: 3, category: '인테리어/마감', term: '벽 수평 확인해', meaning: '', id_trans: 'Periksa kerataan/kesikuan dinding', pron: 'Byeok su-pyeong hwa-gin-he' },
+          { id: 4, category: '인테리어/마감', term: '몰딩 마감해', meaning: '', id_trans: 'Selesaikan pekerjaan lis dekorasi (molding)', pron: 'Mol-ding ma-gam-he' },
+          { id: 5, category: '인테리어/마감', term: '보온재 채워 넣어', meaning: '', id_trans: 'Masukkan bahan isolasi termal di sela-sela', pron: 'Bo-on-jae chae-wo neo-eo' },
+          { id: 6, category: '인테리어/마감', term: '카페트 설치해', meaning: '', id_trans: 'Pasang karpet', pron: 'Ka-pe-teu seol-chi-he' },
+          { id: 7, category: '인테리어/마감', term: '창틀 마감해', meaning: '', id_trans: 'Selesaikan penyelesaian tepi bingkai jendela', pron: 'Chang-teul ma-gam-he' },
+          { id: 8, category: '가구/설치', term: '가구 고정해', meaning: '', id_trans: 'Kencangkan/tetapkan posisi perabotan', pron: 'Ga-gu go-jeong-he' },
+          { id: 9, category: '가구/설치', term: '문손잡이 달아', meaning: '', id_trans: 'Pasang gagang pintu', pron: 'Mun-son-ja-bi da-ra' },
+          { id: 10, category: '가구/설치', term: '커튼 레일 달아', meaning: '', id_trans: 'Pasang rel tirai/gorden', pron: 'Keo-teun re-il da-ra' },
+          { id: 11, category: '가구/설치', term: '유닛 설치해', meaning: '', id_trans: 'Pasang unit kabin/kamar mandi cetakan (Unit)', pron: 'Yu-nit seol-chi-he' },
+          { id: 12, category: '가구/설치', term: '도어 스토퍼 달아', meaning: '', id_trans: 'Pasang penahan pintu (door stopper)', pron: 'Do-eo seu-to-peo da-ra' },
+          { id: 13, category: '가구/설치', term: '매트리스 가져와', meaning: '', id_trans: 'Bawa kasur (matras) ke sini', pron: 'Mae-teu-ri-seu ga-jyeo-wa' },
+          { id: 14, category: '가구/설치', term: '문 수평 조절해', meaning: '', id_trans: 'Atur kerataan ayunan pintu', pron: 'Mun su-pyeong jo-jeol-he' },
+          { id: 15, category: '가구/설치', term: '행거 다시 붙여', meaning: '', id_trans: 'Pasang kembali gantungan baju', pron: 'Haeng-geo da-si bu-chyeo' },
+          { id: 16, category: '가구/설치', term: '냉장고 수평 잡아', meaning: '', id_trans: 'Ratakan posisi pijakan kulkas', pron: 'Naeng-jang-go su-pyeong ja-ba' },
+          { id: 17, category: '가구/설치', term: '티비 선반 붙여', meaning: '', id_trans: 'Pasang rak TV', pron: 'Ti-bi seon-ban bu-chyeo' },
+          { id: 18, category: '가구/설치', term: '서랍 열어봐', meaning: '', id_trans: 'Coba buka lacinya', pron: 'Seo-rap yeo-reo-bwa' },
+          { id: 19, category: '가구/설치', term: '가구 입고 확인해', meaning: '', id_trans: 'Periksa daftar penerimaan perabotan', pron: 'Ga-gu ip-go hwa-gin-he' },
+          { id: 20, category: '실리콘/도구', term: '실리콘 작업해', meaning: '', id_trans: 'Kerjakan pengeleman silikon', pron: 'Sil-ri-kon ja-geop-he' },
+          { id: 21, category: '실리콘/도구', term: '실란트 작업해', meaning: '', id_trans: 'Berikan lem pelapis (sealant)', pron: 'Sil-ran-teu ja-geop-he' },
+          { id: 22, category: '실리콘/도구', term: '실리콘 헤라 가져와', meaning: '', id_trans: 'Bawa alat perata silikon (scraper/hera)', pron: 'Sil-ri-kon he-ra ga-jyeo-wa' },
+          { id: 23, category: '실리콘/도구', term: '인테리어 공구 챙겨', meaning: '', id_trans: 'Siapkan perkakas pengerjaan interior', pron: 'In-te-ri-eo gong-gu chaeng-gyeo' },
+          { id: 24, category: '전기/설비', term: '스위치 눌러봐', meaning: '', id_trans: 'Coba tekan sakelarnya', pron: 'Seu-wi-chi nul-reo-bwa' },
+          { id: 25, category: '전기/설비', term: '냉방 확인해', meaning: '', id_trans: 'Periksa sistem pendingin ruangan (AC)', pron: 'Naeng-bang hwa-gin-he' },
+          { id: 26, category: '전기/설비', term: '변기 물 내려봐', meaning: '', id_trans: 'Coba siram (flush) air toilet', pron: 'Byeon-gi mul nae-ryeo-bwa' },
+          { id: 27, category: '전기/설비', term: '선실 온도 확인해', meaning: '', id_trans: 'Periksa suhu dalam kabin', pron: 'Seon-sil on-do hwa-gin-he' },
+          { id: 28, category: '전기/설비', term: '비상벨 눌러봐', meaning: '', id_trans: 'Coba tekan bel darurat', pron: 'Bi-sang-bel nul-reo-bwa' },
+          { id: 29, category: '전기/설비', term: '환풍기 소리 들어봐', meaning: '', id_trans: 'Dengarkan bunyi kipas ventilasi (normal atau tidak)', pron: 'Hwan-pung-gi so-ri deu-reo-bwa' },
+          { id: 30, category: '전기/설비', term: '콘센트 전기 확인해', meaning: '', id_trans: 'Periksa aliran listrik di stopkontak', pron: 'Kon-sen-teu jeon-gi hwa-gin-he' },
+          { id: 31, category: '청소/보양', term: '가빠 깔아', meaning: '포장지 설치해', id_trans: 'Gelar terpal/plastik pelindung lantai', pron: 'Gap-pa kka-ra' },
+          { id: 32, category: '청소/보양', term: '방 청소해', meaning: '', id_trans: 'Bersihkan kamar (kabin)', pron: 'Bang cheong-so-he' },
+          { id: 33, category: '청소/보양', term: '나무 조각 치워', meaning: '', id_trans: 'Singkirkan serpihan-serpihan kayu', pron: 'Na-mu jo-gak chi-wo' },
+          { id: 34, category: '청소/보양', term: '거울 깨끗이 닦아', meaning: '', id_trans: 'Lap cermin sampai bersih', pron: 'Geo-ul kke-kkeu-si da-kka' },
+          { id: 35, category: '청소/보양', term: '복도 같이 청소해', meaning: '', id_trans: 'Bersihkan lorong sekaligus', pron: 'Bok-do ga-chi cheong-so-he' },
+          { id: 36, category: '청소/보양', term: '가구 보호 스티커 붙여', meaning: '', id_trans: 'Tempel stiker pelindung perabotan', pron: 'Ga-gu bo-ho seu-ti-keo bu-chyeo' },
+          { id: 37, category: '청소/보양', term: '승강기 안 청소해', meaning: '', id_trans: 'Bersihkan bagian dalam lift', pron: 'Seung-gang-gi an cheong-so-he' },
+          { id: 38, category: '규정/생활', term: '선내 음식 섭취 안돼', meaning: '', id_trans: 'Dilarang makan dan minum di dalam kapal', pron: 'Seon-nae eum-sik seop-chwi an-dwae' },
+          { id: 39, category: '규정/생활', term: '신발 벗고 들어와', meaning: '', id_trans: 'Lepas sepatu Anda sebelum masuk', pron: 'Sin-bal beot-go deu-reo-wa' },
+          { id: 40, category: '규정/생활', term: '가구 조심해', meaning: '', id_trans: 'Hati-hati dengan perabotan', pron: 'Ga-gu jo-sim-he' },
+          { id: 41, category: '규정/생활', term: '방문 열쇠로 잠가', meaning: '', id_trans: 'Kunci pintu kamar dengan kuncinya', pron: 'Bang-mun yeol-soe-ro jam-ga' },
+          { id: 42, category: '규정/생활', term: '선실 화기 금지해', meaning: '', id_trans: 'Dilarang keras menyalakan api/merokok di kabin', pron: 'Seon-sil hwa-gi geum-ji-he' },
+          { id: 43, category: '규정/생활', term: '깨끗한 신발 신어', meaning: '', id_trans: 'Gunakan sepatu yang bersih', pron: 'Kke-kkeut-han sin-bal si-neo' },
+          { id: 44, category: '규정/생활', term: '출입증 확인해', meaning: '', id_trans: 'Periksa kartu akses (ID Card)', pron: 'Chu-rip-jeung hwa-gin-he' },
+          { id: 45, category: '기타/검사', term: '선실 도면 봐', meaning: '', id_trans: 'Lihat gambar rancangan kabin', pron: 'Seon-sil do-myeon bwa' },
+          { id: 46, category: '기타/검사', term: '선실 검사 준비해', meaning: '', id_trans: 'Siapkan untuk inspeksi kabin', pron: 'Seon-sil geom-sa jun-bi-he' },
+          { id: 47, category: '기타/검사', term: '작업 일지 써', meaning: '', id_trans: 'Tulislah buku laporan kerja (logbook)', pron: 'Ja-geop il-ji sseo' },
+          { id: 48, category: '기타/검사', term: '발판 조심해', meaning: '', id_trans: 'Hati-hati dengan pijakan lantai', pron: 'Bal-pan jo-sim-he' },
+          { id: 49, category: '기타/검사', term: '사다리 조심해', meaning: '', id_trans: 'Hati-hati saat memakai tangga', pron: 'Sa-da-ri jo-sim-he' },
+          { id: 50, category: '기타/검사', term: '서포트 설치해', meaning: '', id_trans: 'Pasang tiang penyangga (support)', pron: 'Seo-po-teu seol-chi-he' }
+        ],
+        '선박커미셔닝부': [
+          { id: 1, category: '전기/전원', term: '파워 올려', meaning: '판넬 및 장비 전원 켜', id_trans: 'Nyalakan daya/listrik (Power On)', pron: 'Pa-wo ol-ryeo' },
+          { id: 2, category: '전기/전원', term: '파워 꺼', meaning: '판넬 및 장비 전원 꺼', id_trans: 'Matikan daya listrik (Power Off)', pron: 'Pa-wo kkeo' },
+          { id: 3, category: '전기/전원', term: '전원 오프 (off)', meaning: '', id_trans: 'Matikan sumber daya', pron: 'Jeon-won o-peu' },
+          { id: 4, category: '전기/전원', term: '쇼파워 체인지 해', meaning: '발전기 전원에서 안벽전원으로 변경해', id_trans: 'Pindah ke daya listrik dermaga (Shore Power)', pron: 'Syo-pa-wo che-in-ji he' },
+          { id: 5, category: '전기/전원', term: '파워 박치기 조심해', meaning: '전원 충돌 조심해', id_trans: 'Hati-hati tabrakan arus listrik (korsleting)', pron: 'Pa-wo bak-chi-gi jo-sim-he' },
+          { id: 6, category: '전기/전원', term: '주방 판넬 전원 투입해', meaning: '', id_trans: 'Nyalakan daya listrik untuk panel dapur', pron: 'Ju-bang pan-nel jeon-won tu-ip-he' },
+          { id: 7, category: '전기/전원', term: '감전 조심해', meaning: '', id_trans: 'Hati-hati tersengat listrik', pron: 'Gam-jeon jo-sim-he' },
+          { id: 8, category: '전기/계측', term: '테스터기 찍어봐', meaning: '멀티테스터기로 전류,전압 측정해', id_trans: 'Periksa menggunakan multimeter (tester)', pron: 'Te-seu-teo-gi jji-geo-bwa' },
+          { id: 9, category: '전기/계측', term: '메가 확인해', meaning: '케이블 및 장비 절연상태 점검해', id_trans: 'Periksa insulasi kabel (Tes Megger)', pron: 'Me-ga hwa-gin-he' },
+          { id: 10, category: '전기/계측', term: '접지 잡아봐', meaning: 'Cable을 Hull과 Grounding해', id_trans: 'Pasang kabel grounding (ke lambung kapal)', pron: 'Jeop-ji ja-ba-bwa' },
+          { id: 11, category: '전기/계측', term: '라인 체크해', meaning: '케이블 라인 체크해', id_trans: 'Periksa jalur/koneksi kabel', pron: 'Ra-in che-keu-he' },
+          { id: 12, category: '전기/계측', term: '케이블 떼', meaning: '', id_trans: 'Lepaskan kabel', pron: 'Ke-i-beul ttae' },
+          { id: 13, category: '전기/계측', term: '케이블 다시 붙여', meaning: '', id_trans: 'Pasang kembali kabelnya', pron: 'Ke-i-beul da-si bu-chyeo' },
+          { id: 14, category: '전기/계측', term: '접프 잡아', meaning: 'Cable 과 Cable 사이를 연결해', id_trans: 'Sambungkan kabel jumper sementara', pron: 'Jeom-peu ja-ba' },
+          { id: 15, category: '알람/제어', term: '알람 울리나 봐', meaning: '', id_trans: 'Periksa apakah alarmnya berbunyi', pron: 'Al-ram ul-ri-na bwa' },
+          { id: 16, category: '알람/제어', term: 'AMS 봐', meaning: 'AMS(Alarm monitoring System) 확인해', id_trans: 'Lihat sistem monitoring alarm pusat (AMS)', pron: 'E-i-em-e-seu bwa' },
+          { id: 17, category: '알람/제어', term: '알람 내', meaning: '알람 발생 시켜', id_trans: 'Nyalakan/picu alarm', pron: 'Al-ram nae' },
+          { id: 18, category: '알람/제어', term: '알람 리셋', meaning: '알람 리셋 시켜', id_trans: 'Atur ulang (Reset) alarm', pron: 'Al-ram ri-set' },
+          { id: 19, category: '알람/제어', term: '디지 알람 띄워', meaning: '발전기 알람 발생시켜', id_trans: 'Picu alarm generator mesin diesel', pron: 'Di-ji al-ram tti-wo' },
+          { id: 20, category: '알람/제어', term: '알람 좀 잡아라', meaning: '알람 소리 꺼', id_trans: 'Matikan suara alarm', pron: 'Al-ram jom ja-ba-ra' },
+          { id: 21, category: '알람/제어', term: '알람 얼마냐?', meaning: '모니터에서 알람 세팅 값을 확인해라', id_trans: 'Berapa nilai setting alarmnya?', pron: 'Al-ram eol-ma-nya?' },
+          { id: 22, category: '알람/제어', term: 'IO 리스트 확인해', meaning: '도면의 IO 와 AMS IO 신호가 맞는지 확인해', id_trans: 'Periksa daftar sinyal I/O', pron: 'A-i-o ri-seu-teu hwa-gin-he' },
+          { id: 23, category: '시운전/기계', term: '점검하러 가', meaning: '', id_trans: 'Pergi untuk melakukan inspeksi', pron: 'Jeom-geom-ha-reo ga' },
+          { id: 24, category: '시운전/기계', term: '비상 발전기 돌려', meaning: '', id_trans: 'Jalankan generator darurat', pron: 'Bi-sang bal-jeon-gi dol-ryeo' },
+          { id: 25, category: '시운전/기계', term: '펌프 가동해봐', meaning: '', id_trans: 'Coba jalankan pompa', pron: 'Peom-peu ga-dong-he-bwa' },
+          { id: 26, category: '시운전/기계', term: '모터 방향 점검해', meaning: '모터 도는 방향 봐', id_trans: 'Periksa arah putaran motor', pron: 'Mo-teo bang-hyang jeom-geom-he' },
+          { id: 27, category: '시운전/기계', term: '스타트 푸쉬', meaning: '펌프 스타트 버튼 눌러', id_trans: 'Tekan tombol Mulai (Start)', pron: 'Seu-ta-teu pu-swi' },
+          { id: 28, category: '시운전/기계', term: '스탑 푸쉬', meaning: '펌프 스탑 버튼 눌러', id_trans: 'Tekan tombol Berhenti (Stop)', pron: 'Seu-tap pu-swi' },
+          { id: 29, category: '시운전/기계', term: '이머전시 스탑 푸쉬', meaning: '이머전시 스탑 버튼 눌러', id_trans: 'Tekan tombol Berhenti Darurat (Emergency Stop)', pron: 'I-meo-jeon-si seu-tap pu-swi' },
+          { id: 30, category: '시운전/기계', term: '이머전시 스탑 리셋', meaning: '이머전시 스탑 리셋 시켜', id_trans: 'Reset tombol Berhenti Darurat', pron: 'I-meo-jeon-si seu-tap ri-set' },
+          { id: 31, category: '시운전/기계', term: '조타 장치 확인해', meaning: '', id_trans: 'Periksa sistem kemudi/setir kapal', pron: 'Jo-ta jang-chi hwa-gin-he' },
+          { id: 32, category: '시운전/기계', term: '인터락 유지해', meaning: '', id_trans: 'Pertahankan status kunci otomatis (Interlock)', pron: 'In-teo-rak yu-ji-he' },
+          { id: 33, category: '테스트/측정', term: '템프 체크해', meaning: '온도센서 점검해', id_trans: 'Periksa suhu (temperature)', pron: 'Tem-peu che-keu-he' },
+          { id: 34, category: '테스트/측정', term: '템프 걸어', meaning: '테스트 장비로 장비에 온도값 입력해', id_trans: 'Berikan input nilai suhu untuk uji coba', pron: 'Tem-peu geo-reo' },
+          { id: 35, category: '테스트/측정', term: '프레셔 걸어', meaning: '테스트 장비로 장비에 압력 인가해', id_trans: 'Berikan tekanan udara/fluida untuk uji coba', pron: 'Peu-re-syeo geo-reo' },
+          { id: 36, category: '테스트/측정', term: '레벨 땡겨', meaning: '레벨스위치 테스트 콕 올려', id_trans: 'Tarik alat sensor batas (Level) untuk uji coba', pron: 'Re-bel ttaeng-gyeo' },
+          { id: 37, category: '테스트/측정', term: '센서 수치 읽어', meaning: '', id_trans: 'Baca angka pada sensor', pron: 'Sen-seo su-chi il-geo' },
+          { id: 38, category: '테스트/측정', term: '리크 있나 확인해', meaning: '누설 있는지 확인해', id_trans: 'Periksa apakah ada kebocoran (Leak)', pron: 'Ri-keu it-na hwa-gin-he' },
+          { id: 39, category: '테스트/측정', term: '진동 측정해', meaning: '', id_trans: 'Ukur getaran mesin', pron: 'Jin-dong cheuk-jeong-he' },
+          { id: 40, category: '테스트/측정', term: '블랙아웃 테스트해', meaning: '', id_trans: 'Lakukan uji mati listrik total (Blackout Test)', pron: 'Beul-raek-a-ut te-seu-teu-he' },
+          { id: 41, category: '테스트/측정', term: '스팀 배관 확인해', meaning: '', id_trans: 'Periksa jalur perpipaan uap (Steam)', pron: 'Seu-tim bae-gwan hwa-gin-he' },
+          { id: 42, category: '통신/네트워크', term: '통신 상태 확인해', meaning: '', id_trans: 'Periksa kondisi jaringan komunikasi', pron: 'Tong-sin sang-tae hwa-gin-he' },
+          { id: 43, category: '통신/네트워크', term: '선내 와이파이 확인해', meaning: '', id_trans: 'Periksa koneksi Wi-Fi di dalam kapal', pron: 'Seon-nae wa-i-pa-i hwa-gin-he' },
+          { id: 44, category: '통신/네트워크', term: '감도, 감도', meaning: '(무전기 교신 확인할때 사용) 내 말 들려?', id_trans: 'Cek radio: Apakah suara saya terdengar?', pron: 'Gam-do, gam-do' },
+          { id: 45, category: '통신/네트워크', term: '무전기 챙겨', meaning: '', id_trans: 'Bawa radio HT (Walkie-talkie)', pron: 'Mu-jeon-gi chaeng-gyeo' },
+          { id: 46, category: '구역/이동', term: '배에 올라가', meaning: '', id_trans: 'Naik ke kapal', pron: 'Bae-e ol-ra-ga' },
+          { id: 47, category: '구역/이동', term: '브릿지로 가', meaning: 'Wheel House로 가', id_trans: 'Pergi ke anjungan kapal (Bridge)', pron: 'Beu-rit-ji-ro ga' },
+          { id: 48, category: '구역/이동', term: 'ECR로 가', meaning: 'ECR(Engine control room)로 가', id_trans: 'Pergi ke Ruang Kontrol Mesin (ECR)', pron: 'I-si-al-ro ga' },
+          { id: 49, category: '구역/이동', term: '디지룸으로 가', meaning: '비상 발전기실로 가', id_trans: 'Pergi ke ruang Generator Darurat', pron: 'Di-ji-rum-eu-ro ga' },
+          { id: 50, category: '구역/이동', term: '로컬로 가', meaning: '장비 위치로 가', id_trans: 'Pergi ke lokasi mesin langsung (Local)', pron: 'Ro-keol-ro ga' },
+          { id: 51, category: '도면/서류', term: '파워도면 봐봐', meaning: 'Power Connection 도면 확인해 봐', id_trans: 'Lihat gambar diagram kelistrikan (Power)', pron: 'Pa-wo-do-myeon bwa-bwa' },
+          { id: 52, category: '도면/서류', term: '커넥션도면 봐봐', meaning: 'Control Connection 도면 확인해 봐', id_trans: 'Lihat gambar diagram kontrol (Connection)', pron: 'Keo-nek-syeon-do-myeon bwa-bwa' },
+          { id: 53, category: '도면/서류', term: '메이커도면 봐봐', meaning: '장비 공급 메이커 도면 확인해 봐', id_trans: 'Lihat gambar/manual dari pabrik pembuat alat', pron: 'Me-i-keo-do-myeon bwa-bwa' },
+          { id: 54, category: '도면/서류', term: '매뉴얼 읽어봐', meaning: '', id_trans: 'Baca buku panduannya (Manual)', pron: 'Mae-nyu-eol il-geo-bwa' },
+          { id: 55, category: '검사/보고', term: '선주 확인받아', meaning: '', id_trans: 'Minta konfirmasi dari pengawas pemilik kapal', pron: 'Seon-ju hwa-gin-ba-da' },
+          { id: 56, category: '검사/보고', term: '테스트 완료했다고 해', meaning: '', id_trans: 'Laporkan bahwa pengujian sudah selesai', pron: 'Te-seu-teu wal-ryo-haet-da-go he' },
+          { id: 57, category: '검사/보고', term: '코멘트 수정해', meaning: '', id_trans: 'Perbaiki keluhan yang dicatat (Comment)', pron: 'Ko-men-teu su-jeong-he' },
+          { id: 58, category: '검사/보고', term: '테스트 결과 써', meaning: '', id_trans: 'Tulis hasil pengujian', pron: 'Te-seu-teu gyeol-gwa sseo' },
+          { id: 59, category: '검사/보고', term: '검사 후에 원상복구 해라', meaning: '', id_trans: 'Kembalikan seperti semula setelah inspeksi selesai', pron: 'Geom-sa hu-e won-sang-bok-gu he-ra' },
+          { id: 60, category: '안전/기타', term: 'LOTO 실시해', meaning: 'LOTO(LOCK OUT TAG OUT) 실시해', id_trans: 'Lakukan sistem LOTO (Kunci dan Beri Tag)', pron: 'Ro-to sil-si-he' },
+          { id: 61, category: '안전/기타', term: '과부하 조심해', meaning: '', id_trans: 'Hati-hati tegangan/beban berlebih (Overload)', pron: 'Gwa-bu-hwa jo-sim-he' },
+          { id: 62, category: '안전/기타', term: '확인 점검 실시해', meaning: '', id_trans: 'Lakukan pengecekan dan konfirmasi', pron: 'Hwa-gin jeom-geom sil-si-he' },
+          { id: 63, category: '안전/기타', term: '오늘 할 일 확인해', meaning: '', id_trans: 'Periksa tugas dan pekerjaan untuk hari ini', pron: 'O-neul hal il hwa-gin-he' },
+          { id: 64, category: '안전/기타', term: '데이터 저장해', meaning: '', id_trans: 'Simpan datanya', pron: 'De-i-teo jeo-jang-he' },
+          { id: 65, category: '안전/기타', term: '비상등 켜지나 봐', meaning: '', id_trans: 'Periksa apakah lampu darurat menyala', pron: 'Bi-sang-deung kyeo-ji-na bwa' },
+          { id: 66, category: '안전/기타', term: '에어 가득 채워', meaning: '', id_trans: 'Isi tekanan udara (air) sampai penuh', pron: 'E-eo ga-deuk chae-wo' },
+          { id: 67, category: '안전/기타', term: '마지막 청소해', meaning: '', id_trans: 'Lakukan pembersihan untuk yang terakhir', pron: 'Ma-ji-mak cheong-so-he' },
+          { id: 68, category: '안전/기타', term: '야간 작업 주의해', meaning: '', id_trans: 'Berhati-hatilah saat bekerja di shift malam', pron: 'Ya-gan ja-geop ju-ui-he' },
+          { id: 69, category: '안전/기타', term: '구명 조끼 위치 봐', meaning: '', id_trans: 'Lihat di mana lokasi jaket pelampung', pron: 'Gu-myeong jo-kki wi-chi bwa' },
+          { id: 70, category: '안전/기타', term: '필요한 서류 챙겨', meaning: '', id_trans: 'Bawa semua dokumen yang diperlukan', pron: 'Pi-ryo-han seo-ryu chaeng-gyeo' },
+          { id: 71, category: '안전/기타', term: '선주 정중하게 대해', meaning: '', id_trans: 'Bersikaplah sopan kepada pengawas kapal', pron: 'Seon-ju jeong-jung-ha-ge dae-he' },
+          { id: 72, category: '안전/기타', term: '긴급 정지 버튼 눌러', meaning: '', id_trans: 'Tekan tombol Berhenti Darurat', pron: 'Gin-geup jeong-ji beo-teun nul-reo' },
+          { id: 73, category: '안전/기타', term: '엔진 온도 체크해', meaning: '', id_trans: 'Cek suhu pada mesin (engine)', pron: 'En-jin on-do che-keu-he' },
+          { id: 74, category: '안전/기타', term: '잠시 대기', meaning: '', id_trans: 'Tunggu sebentar (Standby)', pron: 'Jam-si dae-gi' }
+        ]
+      }), []);
+
+      const currentData = learningData[activeTab] || [];
+
+      // --- 퀴즈 상태 관리 ---
+      const [quizQuestions, setQuizQuestions] = useState([]);
+      const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+      const [quizScore, setQuizScore] = useState(0);
+      const [quizState, setQuizState] = useState('idle'); // 'idle', 'playing', 'result', 'review'
+      const [selectedAnswer, setSelectedAnswer] = useState(null);
+      const [isAnswerCorrect, setIsAnswerCorrect] = useState(null);
+      const [incorrectAnswers, setIncorrectAnswers] = useState([]); // 오답 저장 배열
+
+      // --- 기능: 네비게이션 제어 ---
+      const goToLearn = () => {
+        setCurrentView('learn');
+        setViewStep('dept_select');
+      };
+
+      const goToQuiz = () => {
+        setCurrentView('quiz');
+        setViewStep('dept_select');
+      };
+
+      const handleDeptSelect = (tab) => {
+        setActiveTab(tab);
+        setViewStep('content');
+        if (currentView === 'quiz') setQuizState('idle');
+      };
+
+      const handleBack = () => {
+        if (viewStep === 'content') {
+          setViewStep('dept_select');
+          if (currentView === 'quiz') setQuizState('idle');
+        } else {
+          setCurrentView('home');
+        }
+      };
+
+      // --- 음성 재생 함수 ---
+      const speakText = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'ko-KR';
+          utterance.rate = 0.8;
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert(`음성 파일을 찾을 수 없습니다.\n\n'audio' 폴더 안에 '${text}.mp3' 파일이 정확히 있는지 확인해주세요.`);
+        }
+      };
+
+      // --- MP3 자동 경로 탐색 재생 함수 ---
+      const playAudio = (term) => {
+        const audioRoot = new Audio(`./${term}.mp3`);
+        audioRoot.play().catch(() => {
+          const audioFolder = new Audio(`./audio/${term}.mp3`);
+          audioFolder.play().catch(() => {
+            console.log(`[안내] '${term}.mp3' 파일을 찾을 수 없어 브라우저 기본 음성(TTS)으로 대체합니다.`);
+            speakText(term);
+          });
+        });
+      };
+
+      useEffect(() => {
+        if (quizState === 'playing' && quizQuestions.length > 0) {
+          playAudio(quizQuestions[currentQuizIndex].term);
+        }
+      }, [currentQuizIndex, quizState, quizQuestions]);
+
+      // 완벽한 랜덤 섞기 함수
+      const shuffleArray = (array) => {
+        const newArray = [...array];
+        for (let i = newArray.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+        }
+        return newArray;
+      };
+
+      const startQuiz = () => {
+        if (currentData.length < 4) {
+          alert("단어가 부족합니다 (최소 4개 필요)");
+          return;
+        }
+
+        const shuffledData = shuffleArray(currentData);
+        const selectedQuestions = shuffledData.slice(0, 10);
+
+        const questionsWithOptions = selectedQuestions.map(q => {
+          let incorrectOptions = currentData.filter(item => item.id !== q.id);
+          incorrectOptions = shuffleArray(incorrectOptions).slice(0, 3);
+          const options = shuffleArray([q, ...incorrectOptions]);
+          return { ...q, options: options };
+        });
+
+        setQuizQuestions(questionsWithOptions);
+        setCurrentQuizIndex(0);
+        setQuizScore(0);
+        setIncorrectAnswers([]); // 시작할 때 오답 배열 초기화
+        setQuizState('playing');
+        setSelectedAnswer(null);
+        setIsAnswerCorrect(null);
+      };
+
+      const handleAnswerSelect = (option) => {
+        if (selectedAnswer) return;
+        setSelectedAnswer(option);
+        
+        const currentQuestion = quizQuestions[currentQuizIndex];
+        const correct = option.id === currentQuestion.id;
+        setIsAnswerCorrect(correct);
+
+        if (correct) {
+          setQuizScore(prev => prev + 1);
+        } else {
+          // 오답인 경우 배열에 추가
+          setIncorrectAnswers(prev => [...prev, currentQuestion]);
+        }
+
+        setTimeout(() => {
+          if (currentQuizIndex < quizQuestions.length - 1) {
+            setCurrentQuizIndex(prev => prev + 1);
+            setSelectedAnswer(null);
+            setIsAnswerCorrect(null);
+          } else {
+            setQuizState('result');
+          }
+        }, 1500);
+      };
+
+      // --- 상단 부서 선택 탭 (5x2 그리드 배열 유지) ---
+      const renderTabSelector = (colorClass) => (
+        <div className="w-full mb-6 shrink-0">
+          <div className="flex flex-col gap-1.5 md:gap-2.5 items-center w-full">
+            {/* 상단 5개 탭 */}
+            <div className="grid grid-cols-5 gap-1.5 md:gap-2.5 w-full max-w-4xl">
+              {tabs.slice(0, 5).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    if (currentView === 'quiz') setQuizState('idle');
+                  }}
+                  className={`tab-btn py-1.5 sm:py-2 rounded-lg md:rounded-full font-bold transition-all duration-200 border text-center break-keep leading-[1.15] text-[10px] sm:text-sm md:text-base px-0.5 sm:px-2 md:px-4 ${
+                    activeTab === tab
+                      ? `${colorClass} text-white shadow-md transform scale-[1.02] border-transparent`
+                      : 'bg-white text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            {/* 하단 5개 탭 */}
+            <div className="grid grid-cols-5 gap-1.5 md:gap-2.5 w-full max-w-4xl">
+              {tabs.slice(5, 10).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    if (currentView === 'quiz') setQuizState('idle');
+                  }}
+                  className={`tab-btn py-1.5 sm:py-2 rounded-lg md:rounded-full font-bold transition-all duration-200 border text-center break-keep leading-[1.15] text-[10px] sm:text-sm md:text-base px-0.5 sm:px-2 md:px-4 ${
+                    activeTab === tab
+                      ? `${colorClass} text-white shadow-md transform scale-[1.02] border-transparent`
+                      : 'bg-white text-slate-500 border-slate-200 hover:bg-blue-50 hover:text-blue-700'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+
+      // --- 세련된 화면 전환을 위한 트랜지션 래퍼 ---
+      const renderTransitionWrapper = (content, key) => (
+        <div key={key} className="flex-1 min-h-0 w-full animate-fade-slide-up flex flex-col items-center">
+          {content}
+        </div>
+      );
+
+      // --- 화면 렌더링 파트 ---
+      const renderHome = () => renderTransitionWrapper(
+        <div className="flex flex-col items-center justify-center h-full space-y-6 md:space-y-10 w-full overflow-y-auto custom-scrollbar py-4 px-2">
+          
+          {/* 타이틀 영역 - 딜레이 없이 가장 먼저 나타남 */}
+          <div className="flex flex-col items-center justify-center w-full cursor-pointer animate-fade-slide-up group pb-2">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight break-keep text-center leading-tight transition-transform duration-300 group-hover:scale-105 flex items-center justify-center">
+              <span className="neon-title pb-1">삼호 Yard 한국어</span>
+            </h1>
+            <div className="h-1.5 w-24 sm:w-32 bg-gradient-to-r from-blue-600 to-teal-400 rounded-full mt-2 md:mt-3 opacity-80 shadow-[0_0_12px_rgba(45,212,191,0.6)] group-hover:w-40 transition-all duration-300"></div>
+          </div>
+          
+          {/* 안내 문구 - 약간의 딜레이(0.5초) 후 나타남 */}
+          <p className="animate-delay-1 text-[20px] sm:text-2xl md:text-3xl text-slate-800 font-bold text-center leading-snug break-keep px-4 tracking-tight">
+            생산부서 맞춤형 현장 지시어, 지금 공부하세요!<br/>
+            <span className="text-sm sm:text-base md:text-lg font-medium text-slate-500 mt-2.5 block break-words whitespace-normal tracking-normal">
+              Kuasai instruksi lapangan produksi. Pelajari sekarang juga!
+            </span>
+          </p>
+
+          {/* 버튼 영역 - 약 1.4초 딜레이 후 나타남 */}
+          <div className="animate-delay-2 flex flex-col md:flex-row gap-5 md:gap-8 w-full max-w-3xl px-4 pt-4">
+            <button onClick={goToLearn} className="flex-1 group relative overflow-hidden bg-white p-8 md:p-10 rounded-[2rem] border border-blue-100 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 active:scale-95">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="w-24 h-24 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-1 tracking-tight">학습하기</h2>
+                <span className="block text-base md:text-lg font-bold text-slate-500 mb-3">Belajar</span>
+                <p className="text-slate-500 font-medium text-sm md:text-base leading-relaxed break-keep">
+                  부서별 현장 지시 문장과<br/>뜻을 공부합니다.
+                </p>
+              </div>
+            </button>
+            <button onClick={goToQuiz} className="flex-1 group relative overflow-hidden bg-white p-8 md:p-10 rounded-[2rem] border border-teal-100 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 active:scale-95">
+              <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-white opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="relative z-10 flex flex-col items-center text-center">
+                <div className="w-24 h-24 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-1 tracking-tight">퀴즈풀기</h2>
+                <span className="block text-base md:text-lg font-bold text-slate-500 mb-3">Kuis</span>
+                <p className="text-slate-500 font-medium text-sm md:text-base leading-relaxed break-keep">
+                  배운 문장을 퀴즈로<br/>테스트해 봅니다.
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+      , 'home');
+
+      const renderDeptSelect = () => renderTransitionWrapper(
+        <div className="flex flex-col items-center justify-start flex-1 min-h-0 w-full pt-4 md:pt-10 overflow-y-auto custom-scrollbar">
+          <div className="bg-white/50 backdrop-blur-sm p-4 md:p-6 rounded-2xl mb-6 md:mb-10 text-center w-full max-w-2xl border border-slate-100 shadow-sm shrink-0">
+            <h2 className="text-xl md:text-2xl font-black text-slate-800 break-keep leading-snug">
+              {currentView === 'learn' ? (
+                <>
+                  <span className="text-blue-600">근무하시는 부서</span>를 선택하고<br/> 학습을 시작해 보세요! 👇
+                  <span className="block text-sm md:text-base font-normal text-slate-500 mt-2 break-words whitespace-normal">Pilih departemen Anda dan mulailah belajar!</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-teal-600">근무하시는 부서</span>를 선택하고<br/> 퀴즈에 도전해 보세요! 👇
+                  <span className="block text-sm md:text-base font-normal text-slate-500 mt-2 break-words whitespace-normal">Pilih departemen Anda dan cobalah kuisnya!</span>
+                </>
+              )}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 w-full max-w-5xl px-2 pb-4 shrink-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleDeptSelect(tab)}
+                className="group bg-white border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50 text-slate-700 font-bold py-5 md:py-8 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-2 md:gap-3 w-full"
+              >
+                <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center mb-1 group-hover:scale-110 transition-transform text-2xl md:text-3xl shadow-sm shrink-0 ${currentView === 'learn' ? 'bg-blue-100 text-blue-600' : 'bg-teal-100 text-teal-600'}`}>
+                   {getDeptIcon(tab)}
+                </div>
+                <span className="text-base md:text-lg break-keep text-center w-full px-1">{tab}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      , `dept_select_${currentView}`);
+
+      const renderLearnContent = () => renderTransitionWrapper(
+        <div className="flex flex-col flex-1 min-h-0 w-full max-w-5xl mx-auto">
+          {renderTabSelector('bg-blue-600')}
+
+          <div className="bg-slate-50 rounded-3xl p-4 md:p-8 border border-slate-100 shadow-inner flex flex-col flex-1 min-h-0">
+            <div className="flex justify-between items-end mb-3 md:mb-6 px-1 md:px-2 shrink-0 border-b border-slate-200 pb-3 md:pb-4">
+              <h2 className="text-lg sm:text-xl md:text-3xl font-black text-slate-800 tracking-tight flex items-center flex-wrap break-keep">
+                <span className="text-xl sm:text-2xl md:text-4xl mr-1.5 md:mr-2 animate-pop-in shrink-0">{getDeptIcon(activeTab)}</span>
+                <span className="text-blue-600 mr-1 md:mr-2 whitespace-nowrap">[{activeTab}]</span>
+                <span className="whitespace-nowrap">문장 학습</span>
+              </h2>
+              <span className="text-xs sm:text-sm md:text-base text-slate-500 font-bold bg-white px-3 py-1 md:py-1.5 rounded-full border border-slate-200 shadow-sm shrink-0 ml-2">
+                총 <span className="text-blue-600">{currentData.length}</span>개
+              </span>
+            </div>
+
+            <div className="overflow-y-auto custom-scrollbar pr-2 md:pr-4 space-y-4 flex-1 min-h-0">
+              {currentData.length > 0 ? (
+                currentData.map((item) => (
+                  <div key={item.id} className="bg-white p-4 md:p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-200 group w-full">
+                    <div className="flex justify-between items-start md:items-center w-full">
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 text-[11px] md:text-sm font-bold rounded-lg mb-2 md:mb-3 border border-blue-100 break-keep">
+                          {item.category}
+                        </span>
+                        <div className="mb-3 md:mb-4">
+                          <h3 className="text-[17px] sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight group-hover:text-blue-900 transition-colors break-words whitespace-normal leading-snug w-full">
+                            {item.term}
+                          </h3>
+                          {item.meaning && (
+                            <p className="text-[13px] sm:text-sm md:text-base font-medium text-slate-500 leading-relaxed mt-1 break-words whitespace-normal w-full">
+                              {item.meaning}
+                            </p>
+                          )}
+                        </div>
+                        <div className="bg-slate-50/80 rounded-xl p-3 md:p-4 border border-slate-100/80 group-hover:bg-blue-50/50 transition-colors w-full">
+                          <p className="text-sm sm:text-base md:text-lg font-bold text-teal-700 mb-1.5 break-words whitespace-normal w-full">
+                            🇮🇩 {item.id_trans}
+                          </p>
+                          <p className="text-xs sm:text-sm md:text-base font-medium text-slate-500 italic break-words whitespace-normal w-full">
+                            🗣️ {item.pron}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        onClick={() => playAudio(item.term)}
+                        className="ml-3 md:ml-4 p-3 md:p-5 mt-1 md:mt-0 rounded-full bg-slate-50 text-slate-400 hover:bg-blue-600 hover:text-white hover:shadow-lg active:scale-95 transition-all duration-200 shrink-0 border border-slate-200 hover:border-blue-600 flex items-center justify-center" 
+                        title="한국어 발음 듣기"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7 md:h-10 md:w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 text-slate-400 font-medium flex flex-col items-center justify-center h-full break-keep w-full">
+                  <p>해당 부서의 학습 데이터가 아직 준비되지 않았습니다.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      , `learn_content_${activeTab}`);
+
+      const renderQuizContent = () => {
+        let content;
+
+        if (quizState === 'idle') {
+          content = (
+            <div className="max-w-md w-full my-auto animate-fade-slide-up px-2">
+              <div className="bg-teal-100 text-teal-600 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner text-5xl animate-pop-in">
+                {getDeptIcon(activeTab)}
+              </div>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-800 mb-4 break-keep">
+                <span className="text-teal-600 mr-1 md:mr-2 whitespace-nowrap">[{activeTab}]</span>
+                <span className="whitespace-nowrap">랜덤 퀴즈</span>
+                <span className="block text-sm sm:text-base md:text-lg font-bold text-slate-500 mt-2 break-words whitespace-normal">Kuis Acak</span>
+              </h2>
+              <p className="text-slate-500 mb-10 text-sm md:text-base leading-relaxed break-keep w-full">
+                들려주는 한국어 지시어를 듣고,<br/>올바른 뜻을 골라보세요.<br/>
+                <span className="text-xs md:text-sm font-normal opacity-80 mt-1 block break-words whitespace-normal w-full">Dengarkan instruksi bahasa Korea dan pilih arti bahasa Indonesia yang benar.</span>
+                <strong className="text-teal-600 mt-3 block text-sm">매번 무작위로 10문제가 출제됩니다!</strong>
+                <span className="text-teal-600/80 text-xs block break-words whitespace-normal w-full">10 pertanyaan acak setiap saat!</span>
+              </p>
+              <button onClick={startQuiz} className="w-full py-4 md:py-5 bg-teal-600 hover:bg-teal-700 text-white text-lg md:text-xl font-black rounded-2xl shadow-xl hover:shadow-2xl transition-all active:scale-95 break-keep">
+                퀴즈 시작하기
+                <span className="block text-sm font-normal opacity-80 mt-0.5">Mulai</span>
+              </button>
+            </div>
+          );
+        } else if (quizState === 'playing' && quizQuestions.length > 0) {
+          content = (
+            <div className="max-w-2xl w-full flex flex-col flex-1 min-h-0 h-full animate-fade-slide-up">
+              <div className="flex justify-between items-center mb-3 md:mb-4 shrink-0 px-2 mt-1 w-full">
+                <span className="text-teal-700 font-black text-base md:text-xl tracking-tight">Pertanyaan {currentQuizIndex + 1} / {quizQuestions.length}</span>
+                <span className="text-slate-500 font-bold text-sm md:text-lg bg-white px-3 py-1 md:py-1.5 rounded-full shadow-sm border border-slate-200 shrink-0">
+                  Skor <span className="text-teal-600 ml-1 text-lg md:text-xl">{quizScore}</span>
+                </span>
+              </div>
+
+              <div className="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 mb-3 md:mb-4 shrink-0 relative overflow-hidden w-full flex flex-col items-center">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-500"></div>
+                <p className="text-xs md:text-sm text-slate-500 font-bold mb-2 md:mb-3 leading-relaxed break-keep text-center w-full">
+                  다음 지시어를 듣고 알맞은 의미를 고르시오.<br/>
+                  <span className="font-normal opacity-80 break-words whitespace-normal inline-block mt-1">Dengarkan dan pilih arti yang sesuai.</span>
+                </p>
+                
+                <div className="flex flex-col items-center justify-center gap-2 md:gap-3 my-1 w-full">
+                  <button 
+                    onClick={() => playAudio(quizQuestions[currentQuizIndex].term)}
+                    className="w-12 h-12 md:w-16 md:h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center hover:bg-teal-600 hover:text-white shadow-sm hover:shadow-md transition-all transform hover:scale-105 border border-teal-200 shrink-0"
+                    title="소리 다시 듣기"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 md:h-8 md:w-8 ml-0.5 md:ml-1" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </button>
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight leading-snug break-words whitespace-normal text-center w-full px-2">
+                    {quizQuestions[currentQuizIndex].term}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2 md:gap-3 flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 pb-2 w-full">
+                {quizQuestions[currentQuizIndex].options.map((option, index) => {
+                  let btnClass = "bg-white text-slate-700 border-slate-200 hover:border-teal-500 hover:bg-teal-50 hover:shadow-md";
+                  
+                  if (selectedAnswer) {
+                    if (option.id === quizQuestions[currentQuizIndex].id) {
+                      btnClass = "bg-green-500 text-white border-green-600 shadow-md transform scale-[1.02] z-10";
+                    } else if (selectedAnswer.id === option.id) {
+                      btnClass = "bg-red-500 text-white border-red-600 opacity-90";
+                    } else {
+                      btnClass = "bg-slate-50 text-slate-400 border-slate-200 opacity-50";
+                    }
+                  }
+
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleAnswerSelect(option)}
+                      disabled={selectedAnswer !== null}
+                      className={`p-3 md:p-4 text-left rounded-xl border-2 text-sm md:text-lg font-bold transition-all duration-200 flex items-center w-full ${btnClass}`}
+                    >
+                      <span className="w-6 md:w-8 shrink-0 text-center opacity-60 mr-2 text-base md:text-xl">{index + 1}.</span> 
+                      <span className="leading-snug break-words whitespace-normal w-full text-sm sm:text-base md:text-lg">{option.id_trans}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        } else if (quizState === 'result') {
+          content = (
+            <div className="max-w-md w-full my-auto px-2 text-center overflow-y-auto custom-scrollbar py-4">
+              <div className="w-28 h-28 md:w-32 md:h-32 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-inner animate-pop-in shrink-0">
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 md:h-16 md:w-16" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1zm-5 8.274l-.818 2.552c.25.112.526.174.818.174.292 0 .569-.062.818-.174L5 10.274zm10 0l-.818 2.552c.25.112.526.174.818.174.292 0 .569-.062.818-.174L15 10.274z" clipRule="evenodd" />
+                </svg>
+              </div>
+              
+              {quizScore === 10 ? (
+                <h2 className="text-3xl md:text-4xl font-black text-teal-600 mb-3 break-keep animate-pop-in">
+                  🎉 만점 축하합니다! 🎉
+                  <span className="block text-lg font-bold text-teal-600/80 mt-2 break-words whitespace-normal">Selamat, Anda mendapat nilai sempurna!</span>
+                </h2>
+              ) : (
+                <h2 className="text-3xl md:text-4xl font-black text-slate-800 mb-3 break-keep">
+                  퀴즈 완료!
+                  <span className="block text-lg font-bold text-slate-500 mt-2 break-words whitespace-normal">Selesai!</span>
+                </h2>
+              )}
+
+              <p className="text-lg md:text-xl text-slate-600 mb-8 md:mb-10 font-medium break-keep">
+                10문제 중 <span className="text-4xl font-black text-teal-600 mx-2">{quizScore}</span>문제를 맞췄습니다.
+                {quizScore === 10 && (
+                  <span className="block mt-2 text-teal-700 font-bold text-base md:text-lg animate-fade-in-up break-words whitespace-normal">
+                    현장 문장을 완벽하게 마스터하셨네요! 👍
+                  </span>
+                )}
+              </p>
+              
+              <div className="flex flex-col gap-3 md:gap-4 w-full shrink-0">
+                {incorrectAnswers.length > 0 && (
+                  <button onClick={() => setQuizState('review')} className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold text-lg rounded-2xl shadow-md transition-colors active:scale-95 break-keep">
+                    틀린 문제 확인하기
+                    <span className="block text-sm font-normal opacity-90 mt-0.5 break-words whitespace-normal">Lihat Jawaban Salah</span>
+                  </button>
+                )}
+                
+                <div className="flex gap-3 md:gap-4 w-full">
+                  <button onClick={startQuiz} className="flex-1 py-3 md:py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-base md:text-lg rounded-2xl shadow-md transition-colors active:scale-95 break-keep">
+                    다시 풀기<span className="block text-xs md:text-sm font-normal opacity-90 mt-0.5 break-words whitespace-normal">Coba Lagi</span>
+                  </button>
+                  <button onClick={() => setCurrentView('home')} className="flex-1 py-3 md:py-4 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 font-bold text-base md:text-lg rounded-2xl shadow-sm transition-colors active:scale-95 break-keep">
+                    처음으로<span className="block text-xs md:text-sm font-normal opacity-70 mt-0.5 break-words whitespace-normal">Ke Beranda</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        } else if (quizState === 'review') {
+          content = (
+            <div className="max-w-2xl w-full flex flex-col flex-1 min-h-0">
+              <div className="flex justify-between items-center mb-4 px-2 shrink-0 mt-2 w-full">
+                <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 text-left flex items-center break-keep">
+                  <span className="text-rose-500 mr-1 md:mr-2 animate-pop-in inline-block text-xl sm:text-2xl">💡</span>
+                  <div className="flex flex-col">
+                    <span className="whitespace-nowrap">오답 노트</span>
+                    <span className="text-xs sm:text-sm font-bold text-slate-400 break-words whitespace-normal">Catatan Jawaban Salah</span>
+                  </div>
+                </h2>
+                <span className="text-[11px] sm:text-xs md:text-sm font-bold bg-rose-100 text-rose-600 px-2 sm:px-3 py-1.5 rounded-full shadow-sm border border-rose-200 text-center shrink-0">
+                  틀린 문제: {incorrectAnswers.length}개<br/>
+                  <span className="opacity-80 scale-90 inline-block break-words whitespace-normal">Jumlah jawaban salah: {incorrectAnswers.length}</span>
+                </span>
+              </div>
+
+              <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-2 space-y-4 mb-4 text-left pb-2 w-full">
+                {incorrectAnswers.map((item, idx) => (
+                  <div key={idx} className="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-rose-300 transition-colors group w-full">
+                    <div className="flex justify-between items-start w-full">
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block px-2.5 py-1 bg-rose-50 text-rose-600 text-[11px] md:text-sm font-bold rounded-lg mb-2 border border-rose-100 break-keep">
+                          {item.category}
+                        </span>
+                        <div className="mb-3 md:mb-4 w-full">
+                          <h3 className="text-lg sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight break-keep w-full">
+                            {item.term}
+                          </h3>
+                          {item.meaning && (
+                            <p className="text-xs sm:text-sm md:text-base font-medium text-slate-500 mt-1 break-keep w-full">
+                              {item.meaning}
+                            </p>
+                          )}
+                        </div>
+                        <div className="bg-slate-50/80 rounded-xl p-3 md:p-4 border border-slate-100/80 group-hover:bg-rose-50/30 transition-colors w-full">
+                          <p className="text-sm sm:text-base md:text-lg font-bold text-teal-700 mb-1.5 break-words whitespace-normal w-full">
+                            🇮🇩 {item.id_trans}
+                          </p>
+                          <p className="text-xs sm:text-sm md:text-base font-medium text-slate-500 italic break-words whitespace-normal w-full">
+                            🗣️ {item.pron}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => playAudio(item.term)}
+                        className="shrink-0 ml-3 p-3 md:p-5 mt-1 rounded-full bg-slate-50 text-slate-400 hover:bg-rose-500 hover:text-white shadow-sm active:scale-95 transition-all duration-200 border border-slate-200 hover:border-rose-600 flex items-center justify-center" 
+                        title="한국어 발음 듣기"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="shrink-0 flex gap-3 pb-2 w-full">
+                <button onClick={() => setQuizState('result')} className="flex-1 py-3 md:py-4 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-sm md:text-base rounded-2xl transition-colors active:scale-95 break-keep">
+                  결과화면으로<br/><span className="font-normal opacity-80 text-xs break-words whitespace-normal mt-0.5 inline-block">Kembali ke Hasil</span>
+                </button>
+                <button onClick={startQuiz} className="flex-1 py-3 md:py-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm md:text-base rounded-2xl shadow-md transition-colors active:scale-95 break-keep">
+                  다시 풀기<br/><span className="font-normal opacity-80 text-xs break-words whitespace-normal mt-0.5 inline-block">Coba Lagi</span>
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        return renderTransitionWrapper(
+          <div className="flex flex-col flex-1 min-h-0 w-full max-w-5xl mx-auto">
+            {renderTabSelector('bg-teal-600')}
+            <div className="bg-slate-50 rounded-3xl p-4 md:p-8 border border-slate-100 shadow-inner flex flex-col items-center justify-center flex-1 min-h-0 text-center w-full">
+              {content}
+            </div>
+          </div>
+        , `quiz_${quizState}_${activeTab}`);
+      };
+
+      return (
+        <div 
+          className="min-h-[100dvh] flex flex-col items-center justify-start py-4 md:py-10 px-2 md:px-4 bg-slate-50 w-full"
+          style={{ fontFamily: "'HD체', 'Hyundai Sans', sans-serif" }}
+        >
+          <div className="fixed top-0 left-0 w-full h-1.5 md:h-2 bg-gradient-to-r from-blue-700 to-teal-500 shadow-sm z-50"></div>
+          
+          {/* 헤더 및 뒤로가기 제어 */}
+          {currentView !== 'home' && (
+            <div className="w-full max-w-5xl flex justify-between items-center mb-3 md:mb-6 px-2 z-40 mt-1 md:mt-0 shrink-0">
+              <button 
+                onClick={handleBack} 
+                className="bg-white/90 backdrop-blur-sm p-2 md:p-3 pr-3 md:pr-5 rounded-full shadow-sm border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all flex items-center active:scale-95 shrink-0"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-6 md:w-6 mr-1 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                <div className="flex flex-col items-start leading-none gap-0.5 shrink-0">
+                  <span className="font-bold text-xs md:text-base whitespace-nowrap">뒤로</span>
+                  <span className="font-normal text-[9px] md:text-xs opacity-70 whitespace-nowrap">Kembali</span>
+                </div>
+              </button>
+
+              <div className="flex flex-col items-center justify-center w-full cursor-pointer animate-fade-slide-up group" onClick={() => setCurrentView('home')}>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight break-keep text-center leading-tight transition-transform duration-300 group-hover:scale-105 flex items-center justify-center">
+                  <span className="neon-title pb-1">삼호 Yard 한국어</span>
+                </h1>
+                <div className="h-1 w-16 sm:w-24 bg-gradient-to-r from-blue-600 to-teal-400 rounded-full mt-0.5 opacity-80 shadow-[0_0_10px_rgba(45,212,191,0.6)] group-hover:w-28 transition-all duration-300"></div>
+              </div>
+              
+              <div className="w-16 md:w-20 shrink-0"></div>
+            </div>
+          )}
+
+          <div className={`w-full max-w-5xl relative bg-white/90 backdrop-blur-md shadow-xl shadow-slate-200/50 rounded-2xl md:rounded-[2.5rem] border border-white flex flex-col flex-1 min-h-0 overflow-hidden ${currentView === 'home' ? 'bg-transparent shadow-none border-none' : 'max-h-[90dvh] md:max-h-[85vh] mt-2 md:mt-0'}`}>
+            <div className={`flex-1 min-h-0 relative flex flex-col w-full ${currentView === 'home' ? 'p-0' : 'p-3 sm:p-4 md:p-8'}`}>
+              {currentView === 'home' && renderHome()}
+              
+              {currentView === 'learn' && viewStep === 'dept_select' && renderDeptSelect()}
+              {currentView === 'learn' && viewStep === 'content' && renderLearnContent()}
+              
+              {currentView === 'quiz' && viewStep === 'dept_select' && renderDeptSelect()}
+              {currentView === 'quiz' && viewStep === 'content' && renderQuizContent()}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
